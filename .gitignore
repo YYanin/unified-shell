@@ -1,0 +1,34 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Executables
+ushell
+TestGrammar
+
+# Parser generated files (can be regenerated)
+*.output
+*.tab.c
+*.tab.h
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Test outputs
+*.tmp
+*.log
+test_output/
+
+# Debug files
+*.dSYM/
+vgcore.*
+core
+
+# OS files
+.DS_Store
+Thumbs.db

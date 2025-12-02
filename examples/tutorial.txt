@@ -1,0 +1,345 @@
+# Unified Shell (ushell) - Interactive Tutorial
+
+Welcome to the Unified Shell interactive tutorial!
+This tutorial will guide you through all the features step-by-step.
+
+## Prerequisites
+- You have built ushell: `make`
+- You are running ushell: `./ushell`
+
+---
+
+## PART 1: Getting Started
+
+### Step 1: Check your prompt
+You should see a prompt like: username:~/directory>
+This shows your current username and directory.
+
+### Step 2: Try the help command
+Type: help
+This will show you all available commands and features.
+
+### Step 3: Check the version
+Type: version
+This shows the shell version and build information.
+
+---
+
+## PART 2: Basic Commands
+
+### Step 4: Find out where you are
+Type: pwd
+This prints your current working directory.
+
+### Step 5: Say hello
+Type: echo Hello, World!
+The shell displays: Hello, World!
+
+### Step 6: Try echo with multiple words
+Type: echo This is a test
+Output: This is a test
+
+---
+
+## PART 3: Variables
+
+### Step 7: Set a variable
+Type: set NAME=John
+This creates a shell variable called NAME with value "John".
+
+### Step 8: Use the variable
+Type: echo Hello, $NAME
+Output: Hello, John
+
+### Step 9: Set another variable
+Type: set AGE=25
+
+### Step 10: Use both variables
+Type: echo $NAME is $AGE years old
+Output: John is 25 years old
+
+### Step 11: Check all variables
+Type: env
+This shows all environment variables.
+
+### Step 12: Remove a variable
+Type: unset NAME
+Type: echo $NAME
+Output: (empty - variable is gone)
+
+---
+
+## PART 4: Arithmetic
+
+### Step 13: Simple addition
+Type: echo $((5 + 3))
+Output: 8
+
+### Step 14: Multiplication
+Type: echo $((6 * 7))
+Output: 42
+
+### Step 15: Division
+Type: echo $((20 / 4))
+Output: 5
+
+### Step 16: Modulo (remainder)
+Type: echo $((17 % 5))
+Output: 2
+
+### Step 17: Arithmetic with variables
+Type: set X=10
+Type: set Y=5
+Type: echo $((X + Y))
+Output: 15
+
+### Step 18: Complex expressions
+Type: echo $((X * Y + 3))
+Output: 53
+
+---
+
+## PART 5: File Operations
+
+### Step 19: Create a file
+Type: mytouch test.txt
+This creates an empty file called test.txt.
+
+### Step 20: List files
+Type: myls
+You should see test.txt in the output.
+
+### Step 21: Check file details
+Type: mystat test.txt
+This shows file size, permissions, timestamps, etc.
+
+### Step 22: Add content to file
+Type: echo Hello, File! > test.txt
+This writes "Hello, File!" to test.txt.
+
+### Step 23: View file contents
+Type: mycat test.txt
+Output: Hello, File!
+
+### Step 24: Append to file
+Type: echo More content >> test.txt
+Type: mycat test.txt
+Output:
+Hello, File!
+More content
+
+### Step 25: Copy the file
+Type: mycp test.txt backup.txt
+Type: myls
+You should see both test.txt and backup.txt.
+
+### Step 26: Remove files
+Type: myrm test.txt backup.txt
+Type: myls
+The files are gone.
+
+---
+
+## PART 6: Directory Operations
+
+### Step 27: Create a directory
+Type: mymkdir my_project
+Type: myls
+You should see my_project/ in the listing.
+
+### Step 28: Change into the directory
+Type: cd my_project
+Type: pwd
+You're now in the my_project directory.
+
+### Step 29: Create files in the directory
+Type: mytouch main.c
+Type: mytouch header.h
+Type: myls
+Output: main.c  header.h
+
+### Step 30: Go back up
+Type: cd ..
+Type: pwd
+You're back in the parent directory.
+
+### Step 31: Remove directory contents
+Type: myrm my_project/main.c my_project/header.h
+
+### Step 32: Remove the directory
+Type: myrmdir my_project
+Type: myls
+The directory is gone.
+
+---
+
+## PART 7: Conditionals
+
+### Step 33: Simple if statement
+Type: if true then
+Type: echo Success!
+Type: fi
+Output: Success!
+
+### Step 34: If with command test
+Type: mytouch testfile.txt
+Type: if myls testfile.txt then
+Type: echo File exists
+Type: fi
+Output: File exists
+
+### Step 35: If with variables
+Type: set FILE=testfile.txt
+Type: if mycat $FILE then
+Type: echo Read successful
+Type: fi
+Output: (contents of testfile.txt)
+Read successful
+
+### Step 36: Clean up
+Type: myrm testfile.txt
+
+---
+
+## PART 8: Pipelines
+
+### Step 37: Create test files
+Type: mytouch file1.c file2.c file3.txt
+
+### Step 38: Simple pipeline
+Type: myls | myfd .c
+Output: file1.c  file2.c
+(Only .c files are shown)
+
+### Step 39: Pipeline with echo
+Type: echo Testing pipeline | mycat
+Output: Testing pipeline
+
+### Step 40: Clean up
+Type: myrm file1.c file2.c file3.txt
+
+---
+
+## PART 9: I/O Redirection
+
+### Step 41: Redirect output
+Type: echo First line > output.txt
+Type: mycat output.txt
+Output: First line
+
+### Step 42: Append to file
+Type: echo Second line >> output.txt
+Type: echo Third line >> output.txt
+Type: mycat output.txt
+Output:
+First line
+Second line
+Third line
+
+### Step 43: Input redirection
+Type: mycat < output.txt
+Output:
+First line
+Second line
+Third line
+
+### Step 44: Combine redirections
+Type: mycat < output.txt > copy.txt
+Type: mycat copy.txt
+Output:
+First line
+Second line
+Third line
+
+### Step 45: Clean up
+Type: myrm output.txt copy.txt
+
+---
+
+## PART 10: Glob Patterns
+
+### Step 46: Create test files
+Type: mytouch test1.txt test2.txt test3.txt data1.txt
+
+### Step 47: Match all .txt files
+Type: myls *.txt
+Output: data1.txt  test1.txt  test2.txt  test3.txt
+
+### Step 48: Match specific prefix
+Type: myls test*.txt
+Output: test1.txt  test2.txt  test3.txt
+
+### Step 49: Single character wildcard
+Type: myls test?.txt
+Output: test1.txt  test2.txt  test3.txt
+
+### Step 50: Character range
+Type: myls test[1-2].txt
+Output: test1.txt  test2.txt
+
+### Step 51: Clean up
+Type: myrm *.txt
+
+---
+
+## PART 11: Advanced Examples
+
+### Step 52: Calculate rectangle area
+Type: set WIDTH=15
+Type: set HEIGHT=10
+Type: echo Area: $((WIDTH * HEIGHT)) square units
+Output: Area: 150 square units
+
+### Step 53: File processing workflow
+Type: mytouch data.txt
+Type: echo Processing... > data.txt
+Type: echo Step 1 complete >> data.txt
+Type: echo Step 2 complete >> data.txt
+Type: if mycat data.txt then
+Type: echo File processed successfully
+Type: fi
+Output:
+Processing...
+Step 1 complete
+Step 2 complete
+File processed successfully
+
+Type: myrm data.txt
+
+### Step 54: Project setup
+Type: mymkdir project
+Type: cd project
+Type: mytouch main.c utils.c
+Type: myls *.c
+Type: cd ..
+Type: myrm project/*.c
+Type: myrmdir project
+
+---
+
+## PART 12: Completion
+
+Congratulations! You've completed the ushell tutorial!
+
+### What you've learned:
+✓ Basic commands (echo, pwd)
+✓ Variables (set, export, unset)
+✓ Arithmetic expressions ($((expr)))
+✓ File operations (mycat, mycp, myrm, mytouch)
+✓ Directory operations (cd, mymkdir, myrmdir)
+✓ Conditionals (if/then/fi)
+✓ Pipelines (cmd1 | cmd2)
+✓ I/O redirection (<, >, >>)
+✓ Glob patterns (*, ?, [...])
+
+### Next steps:
+- Read the User Guide: docs/USER_GUIDE.md
+- Try the example scripts: ./ushell < examples/example_scripts.sh
+- Explore advanced examples: examples/advanced_examples.sh
+- Build your own shell scripts!
+
+### Exit the shell:
+Type: exit
+or press: Ctrl+D
+
+Thank you for using Unified Shell!

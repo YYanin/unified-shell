@@ -1,0 +1,77 @@
+-- MiniShell grammar for BNFC (C backend)
+-- Extended with: variables, subcommands (backticks), and if/then/fi conditionals
+-- FIX 1 Applied: Restructured CommandPart to eliminate reduce/reduce conflicts
+comment "/*" "*/" ;
+comment "//" "\n" ;
+
+token Word (letter | digit | '-' | '.' | '/') (letter | digit | '_' | '-' | '.' | '/')* ;
+
+entrypoints Input ;
+
+-- ============================================================================
+-- Top-level: Input and Jobs
+-- ============================================================================
+
+StartInput. Input ::= ListJob ;
+
+OneJobFG. Job ::= CommandLine ;
+OneJobBG. Job ::= CommandLine "&" ;
+
+SeparatorJob. ListJob ::= Job ";" ListJob ;
+ConsJob. ListJob ::= Job ;
+
+-- ============================================================================
+-- Command Lines with optional redirection
+-- ============================================================================
+
+MkCmdLine. CommandLine ::= Pipeline OptRedir ;
+
+NoRedir. OptRedir ::= ;
+InOutRedir. OptRedir ::= "<" Word ">" Word ;
+OutInRedir. OptRedir ::= ">" Word "<" Word ;
+OutRedir. OptRedir ::= ">" Word ;
+InRedir. OptRedir ::= "<" Word ;
+
+-- ============================================================================
+-- Pipelines: sequences of CommandParts connected by pipes
+-- ============================================================================
+
+Single. Pipeline ::= CommandPart ;
+Pipe. Pipeline ::= CommandPart "|" Pipeline ;
+
+-- ============================================================================
+-- CommandPart: the primary command unit
+-- FIX 1: Restructured to delay decision until after Word
+-- ============================================================================
+
+-- Main command rule: Word followed by optional tail
+Cmd. CommandPart ::= Word ;
+CmdWithArgs. CommandPart ::= Word ListWordComponent ;
+CmdAssign. CommandPart ::= Word "=" Word ;
+
+-- Variable expansion (not preceded by Word)
+VarExpand. CommandPart ::= "$" Word ;
+
+-- If/then/fi conditionals
+IfCmd. CommandPart ::= "if" Pipeline "then" ListCommandLine "fi" ;
+IfElseCmd. CommandPart ::= "if" Pipeline "then" ListCommandLine "else" ListCommandLine "fi" ;
+
+-- ============================================================================
+-- Word Components: can be literals, variables, or subcommands
+-- (Used in variable-aware command arguments)
+-- ============================================================================
+
+LitWord. WordComponent ::= Word ;
+VarWord. WordComponent ::= "$" Word ;
+SubCmd. WordComponent ::= "`" Pipeline "`" ;
+
+-- Non-empty word component lists (at least one component)
+SingleWordComponent. ListWordComponent ::= WordComponent ;
+ConsWordComponent. ListWordComponent ::= WordComponent ListWordComponent ;
+
+-- ============================================================================
+-- Command sequences: for if/then/else bodies
+-- ============================================================================
+
+ConsCmdLine. ListCommandLine ::= CommandLine ListCommandLine ;
+NilCmdLine. ListCommandLine ::= ;
