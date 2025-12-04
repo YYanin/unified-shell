@@ -1,883 +1,631 @@
-# Unified Shell (ushell)
+# Unified Shell - Feature-Complete Linux Shell
 
-A feature-rich Unix-like shell implementation with advanced parsing, custom command-line tools, and modern shell features.
+A comprehensive Unix-like shell implementation that combines advanced parsing, custom command-line tools, and modern shell features into a single, cohesive system.
 
-## Project Status
+## Project Overview
 
-DONE **Version 1.0.0 - Production Ready**
+This project unifies three separate shell-related implementations into a single, feature-rich shell:
 
-## Overview
+1. **Grammar-based Parser** - BNFC-generated parser with variable assignment, arithmetic evaluation, and conditionals
+2. **Custom Tools** - Suite of filesystem utilities and a vi-like text editor
+3. **Process Management** - Full fork/exec implementation with pipelines and I/O redirection
 
-The Unified Shell (ushell) is a fully-functional command-line interface that combines:
-1. **Grammar-based Parser** - BNFC-generated parser with robust syntax support
-2. **Custom Tools** - Suite of 10 integrated filesystem utilities
-3. **Process Management** - Full fork/exec with pipelines and I/O redirection
-4. **Advanced Features** - Variables, arithmetic, conditionals, and glob expansion
+### Key Features
 
-Built from the ground up using C, ushell demonstrates systems programming concepts including:
-- Process creation and management (fork, exec, wait)
-- Inter-process communication (pipes)
-- File I/O and redirection
-- Signal handling
-- Memory management
-- Lexical analysis and parsing
+#### Core Shell Features
+- DONE **REPL (Read-Eval-Print Loop)** - Interactive command-line interface
+- DONE **Command Execution** - Fork/exec process management
+- DONE **Pipeline Support** - Multi-stage command pipelines (`cmd1 | cmd2 | cmd3`)
+- DONE **I/O Redirection** - Input (`<`), output (`>`), and append (`>>`)
+- DONE **Background Jobs** - Async command execution with `&`
 
-## Features
-
-### Core Shell Features
-- DONE **Interactive REPL** - Read-eval-print loop with dynamic prompt
-- DONE **Command Execution** - Fork/exec with proper child process management
-- DONE **Pipeline Support** - Multi-stage pipelines (cmd1 | cmd2 | cmd3)
-- DONE **I/O Redirection** - Input (<), output (>), and append (>>)
-- DONE **Signal Handling** - Ctrl+C interrupts commands, Ctrl+D exits gracefully
-- DONE **Job Control** - Background jobs (&), job management (jobs, fg, bg), signal forwarding
-
-### Interactive Features
-- DONE **Line Editing** - Arrow keys for cursor movement within line
-- DONE **Command History** - UP/DOWN arrows navigate previous commands
-- DONE **History Persistence** - Commands saved to ~/.ushell_history
-- DONE **Tab Completion** - Auto-complete commands and filenames
-- DONE **Multi-line Support** - Long commands wrap correctly to next line
-- DONE **Backspace Editing** - Delete characters during input
-- DONE **Ctrl+C Handling** - Cancel current input without exiting shell
-- DONE **Dynamic Terminal Width** - Adapts to terminal resize
-
-### Variables & Expansion
-- DONE **Variable Assignment** - `set VAR=value` for shell-local variables
-- DONE **Environment Variables** - `export VAR=value` for child processes
-- DONE **Variable Expansion** - `$VAR` and `${VAR}` syntax
+#### Variable System
+- DONE **Variable Assignment** - `var=value` syntax
+- DONE **Variable Expansion** - `$var` and `${var}` syntax
 - DONE **Arithmetic Evaluation** - `$((expression))` with +, -, *, /, %
+- DONE **System Environment** - Access to system environment variables
 
-### Control Flow
-- DONE **Conditional Statements** - `if condition then commands fi`
-- DONE **Exit Status Testing** - Commands in if conditions use exit codes
+#### Control Flow
+- DONE **Conditionals** - `if command then commands fi`
+- DONE **If/Else** - `if command then commands else commands fi`
+- DONE **Exit Status** - Commands return proper exit codes
 
-### Pattern Matching
-- DONE **Glob Expansion** - `*` (any chars), `?` (single char)
-- DONE **Character Classes** - `[abc]`, `[a-z]`, `[!abc]`
-- DONE **Multi-pattern** - Multiple globs in single command
+#### Built-in Commands
+- `cd` - Change directory
+- `pwd` - Print working directory
+- `echo` - Display text and variables
+- `export` - Set environment variables
+- `set` - Assign shell variables
+- `exit` - Exit the shell
+- `help` - Display command help
+- `version` - Show version information
 
-### Built-in Commands (16)
-- DONE `cd [dir]` - Change directory (default: $HOME)
-- DONE `pwd` - Print working directory
-- DONE `echo [args...]` - Display arguments with variable expansion
-- DONE `export VAR=value` - Set and export environment variable
-- DONE `set VAR=value` - Set shell-local variable
-- DONE `unset VAR` - Remove variable
-- DONE `env` - Display all environment variables
-- DONE `help` - Display comprehensive help message
-- DONE `version` - Show version and build information
-- DONE `history` - Show command history
-- DONE `edi [file]` - Vi-like text editor (modal: normal/insert/command)
-- DONE `apt` - Package manager (init, update, list, search, show, install, remove, verify)
-- DONE `jobs [-l|-p|-r|-s]` - List background jobs with various formats
-- DONE `fg [%n]` - Bring background/stopped job to foreground
-- DONE `bg [%n]` - Resume stopped job in background
-- DONE `exit` - Exit the shell
+#### Integrated Filesystem Tools
+All tools run as built-ins (no fork overhead):
+- `myls` - List directory contents (with -l, -a flags)
+- `mycat` - Display file contents
+- `mycp` - Copy files and directories (-r, -i flags)
+- `mymv` - Move/rename files (-i flag)
+- `myrm` - Remove files and directories (-r, -i flags)
+- `mymkdir` - Create directories (-p flag)
+- `myrmdir` - Remove empty directories
+- `mytouch` - Create files or update timestamps
+- `mystat` - Display detailed file information
+- `myfd` - Advanced file finder with pattern matching
 
-### Package Management System
-- DONE **APT-like Package Manager** - Local package repository system
-- DONE **Package Installation** - Install packages with dependency resolution
-- DONE **Dependency Management** - Automatic dependency resolution and circular detection
-- DONE **Package Removal** - Safe removal with dependent package warnings
-- DONE **Package Verification** - Integrity checking for installed packages
-- DONE **Repository Index** - Package metadata and search functionality
-- DONE **Auto-install Flag** - `--auto-install` to automatically install dependencies
-- DONE **Force Removal** - `--force` flag to bypass dependent package warnings
+#### Text Editor
+- `edi` - Vi-like modal text editor
+  - NORMAL, INSERT, and COMMAND modes
+  - File I/O with `:w`, `:q`, `:wq`, `:q!`
+  - hjkl navigation
+  - Raw terminal control (no ncurses dependency)
 
-### Integrated Tools (10)
-All tools accessible directly within the shell:
-- DONE `myls [dir]` - List directory contents
-- DONE `mycat file...` - Display file contents
-- DONE `mycp src dest` - Copy files
-- DONE `mymv src dest` - Move/rename files
-- DONE `myrm file...` - Remove files
-- DONE `mymkdir dir...` - Create directories
-- DONE `myrmdir dir...` - Remove empty directories
-- DONE `mytouch file...` - Create/update files
-- DONE `mystat file...` - Display file status
-- DONE `myfd pattern [dir]` - Find files by pattern
+#### Advanced Features
+- DONE **Wildcard Expansion** - `*`, `?`, `[abc]`, `[a-z]` glob patterns
+- DONE **Hidden File Support** - `.` prefix handling
+- DONE **Escaped Characters** - `\*`, `\?` literal matching
+- DONE **Memory Safety** - Valgrind-clean implementation
+- DONE **Error Handling** - Clear error messages and status codes
+
+---
 
 ## Quick Start
 
-### Installation
-
+### Prerequisites
 ```bash
-# Clone or navigate to the project directory
+# Required tools
+gcc --version      # GCC compiler
+make --version     # GNU Make
+bnfc --version     # BNFC 2.9.5+ (if using grammar parser)
+flex --version     # Flex 2.6+
+bison --version    # Bison 3.8+
+```
+
+### Build & Run
+```bash
+# Clone/navigate to project directory
 cd unified-shell
 
-# Build the shell and all tools
+# Build
 make
 
-# Run the shell
-./ushell
-```
-
-### First Commands
-
-```bash
-# Try the help command
-help
-
-# Check version
-version
-
-# Initialize package system
-apt init
-
-# Update package index
-apt update
-
-# List available packages
-apt list
-
-# Install a package with dependencies
-apt install mypackage --auto-install
-
-# Set a variable
-set NAME=World
-
-# Use the variable
-echo Hello $NAME
-
-# Try arithmetic
-echo The answer is: $((6 * 7))
-
-# Use a pipeline
-myls | myfd .c
-
-# Change directory and check prompt
-cd /tmp
-pwd
-
-# Exit the shell
-exit
-```
-
-## AI Integration
-
-The unified shell includes AI-powered command suggestions using natural language queries.
-
-### Quick Start with AI
-
-```bash
-# Ask the AI for command suggestions using @ prefix
-@list all python files
-
-# The AI suggests a command
-AI Suggestion: find . -name "*.py"
-
-# Confirm to execute
-Execute this command? (y/n/e): y
-```
-
-**Confirmation Options:**
-- `y` - Execute the suggested command
-- `n` - Cancel, return to prompt  
-- `e` - Edit the suggestion before executing
-
-### Configuration
-
-**Heuristic Mode (Free, No Setup):**
-```bash
-# Set AI helper path
-export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
-
-# Start using @ queries immediately
-./ushell
-@list files
-```
-
-**OpenAI Mode (Intelligent, Requires API Key):**
-```bash
-# Get API key from https://platform.openai.com/api-keys
-export OPENAI_API_KEY="sk-your-api-key-here"
-export USHELL_LLM_MODEL="gpt-4o-mini"  # Optional, default model
-export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
-
-./ushell
-@find all files larger than 1MB modified in last week
-```
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key (optional) | None |
-| `USHELL_LLM_MODEL` | AI model to use | `gpt-4o-mini` |
-| `USHELL_AI_HELPER` | Path to AI helper script | `./aiIntegr/ushell_ai.py` |
-| `USHELL_AI_DEBUG` | Enable debug output | `0` |
-| `USHELL_AI_CONTEXT` | Share shell state with AI | `1` |
-
-### Example Queries
-
-```bash
-@list all c files in src directory
-@show files modified today
-@count lines in main.c
-@create a backup directory
-@find executable files
-@show disk usage
-```
-
-### Features
-
-- **Dual Mode**: Heuristic (free) or OpenAI-powered (intelligent)
-- **Safe by Default**: User confirmation required before execution
-- **Command Catalog**: AI knows all built-in and tool commands
-- **Context-Aware**: Optional shell state for better suggestions
-- **Privacy Controls**: Transparent data usage, opt-out available
-- **Cost Effective**: ~$0.0001-$0.0003 per query with gpt-4o-mini
-
-For detailed documentation, see [aiIntegr/README.md](aiIntegr/README.md).
-
-## Job Control
-
-The unified shell includes comprehensive job control for managing background and stopped processes.
-
-### Background Jobs
-
-Run commands in the background by appending `&`:
-
-```bash
-# Start a long-running process in background
-sleep 30 &
-# Output: [1] 12345
-
-# Continue using the shell immediately
-echo "Shell is responsive"
-
-# Start multiple background jobs
-sleep 10 &    # [1]
-sleep 20 &    # [2]
-sleep 30 &    # [3]
-```
-
-### Listing Jobs
-
-Use the `jobs` command to see all background and stopped jobs:
-
-```bash
-# Basic format
-jobs
-# [1]-  Running              sleep 10 &
-# [2]+  Running              sleep 20 &
-
-# Long format (with PIDs)
-jobs -l
-# [1]-  12345  Running              sleep 10 &
-# [2]+  12346  Running              sleep 20 &
-
-# Show PIDs only
-jobs -p
-# 12345
-# 12346
-
-# Show only running jobs
-jobs -r
-
-# Show only stopped jobs
-jobs -s
-```
-
-**Job Markers:**
-- `+` = Most recent job (default for fg/bg)
-- `-` = Second most recent job
-
-### Signal Handling
-
-**Ctrl+Z** - Stop (suspend) foreground process:
-```bash
-# Start a command
-sleep 60
-
-# Press Ctrl+Z
-^Z
-[1]+  Stopped                 sleep 60
-
-# Job is now stopped, shell prompt returns
-```
-
-**Ctrl+C** - Interrupt (terminate) foreground process:
-```bash
-# Start a command
-sleep 60
-
-# Press Ctrl+C
-^C
-
-# Command terminated, shell continues
-```
-
-**Note:** Ctrl+C and Ctrl+Z only affect foreground jobs, not the shell itself.
-
-### Foreground Command (fg)
-
-Bring a background or stopped job to the foreground:
-
-```bash
-# Start a background job
-sleep 30 &
-[1] 12345
-
-# Bring it to foreground
-fg
-# or specify job number
-fg %1
-
-# Job now runs in foreground (blocking shell)
-```
-
-**Usage:**
-- `fg` - Foreground most recent job
-- `fg %n` - Foreground job number n
-- `fg %job` - Also accepts without %
-
-### Background Command (bg)
-
-Resume a stopped job in the background:
-
-```bash
-# Start a foreground job
-sleep 60
-
-# Stop it with Ctrl+Z
-^Z
-[1]+  Stopped                 sleep 60
-
-# Resume it in background
-bg
-[1]+ sleep 60 &
-
-# Job continues, shell prompt available
-```
-
-**Usage:**
-- `bg` - Resume most recent stopped job
-- `bg %n` - Resume stopped job number n
-
-### Complete Workflow Example
-
-```bash
-# 1. Start a long process
-sleep 100
-
-# 2. Stop it (Ctrl+Z)
-^Z
-[1]+  Stopped                 sleep 100
-
-# 3. Start another process in background  
-sleep 50 &
-[2] 12347
-
-# 4. List all jobs
-jobs
-[1]+  Stopped                 sleep 100
-[2]-  Running                 sleep 50 &
-
-# 5. Resume first job in background
-bg %1
-[1]+ sleep 100 &
-
-# 6. Bring second job to foreground
-fg %2
-
-# 7. Interrupt it (Ctrl+C)
-^C
-
-# 8. Check remaining jobs
-jobs
-[1]+  Running                 sleep 100 &
-```
-
-### Job Completion
-
-When background jobs complete, you'll see notification:
-```bash
-sleep 2 &
-[1] 12345
-
-# After 2 seconds, on next command or Enter:
-[1]+  Done                    sleep 2 &
-```
-
-### Advanced Features
-
-**Pipeline as Background Job:**
-```bash
-# Run entire pipeline in background
-myls | myfd .c | mycat &
-[1] 12345
-```
-
-**Signal Isolation:**
-- Shell ignores Ctrl+C and Ctrl+Z when at prompt
-- Signals only sent to foreground processes
-- Background jobs immune to Ctrl+C
-- Process groups handle pipelines correctly
-
-**Zombie Prevention:**
-- Automatic cleanup of completed jobs
-- No defunct processes accumulate
-- SIGCHLD handler reaps zombies
-
-## Package Management (APT)
-
-The unified shell includes a fully-functional package management system modeled after APT/dpkg.
-
-### Overview
-
-The APT subsystem provides:
-- **Local package repository** in `~/.ushell/`
-- **Dependency resolution** with circular dependency detection
-- **Package installation** with automatic extraction and PATH setup
-- **Package removal** with dependent package warnings
-- **Package verification** to check integrity
-- **Package search** and metadata display
-
-### Quick Start with APT
-
-```bash
-# Initialize the package system (first time only)
-apt init
-
-# Update the package index
-apt update
-
-# List all available packages
-apt list
-
-# List only installed packages
-apt list --installed
-
-# Search for packages
-apt search keyword
-
-# Show package details
-apt show packagename
-
-# Install a package (checks dependencies)
-apt install packagename
-
-# Install with automatic dependency resolution
-apt install packagename --auto-install
-
-# Remove a package
-apt remove packagename
-
-# Force remove (skip dependent warnings)
-apt remove packagename --force
-
-# Verify package integrity
-apt verify packagename
-```
-
-### APT Directory Structure
-
-```
-~/.ushell/
-├── packages/           # Installed packages
-│   └── pkgname/
-│       ├── bin/        # Executable files
-│       ├── lib/        # Library files (if any)
-│       └── METADATA    # Package metadata
-├── repo/
-│   ├── available/      # Package archives (.tar.gz)
-│   ├── cache/          # Downloaded packages (future)
-│   └── index.txt       # Package index
-└── apt.conf            # Configuration file
-```
-
-### Package Format
-
-Packages are `.tar.gz` archives with this structure:
-```
-packagename-version/
-├── bin/                # Executables
-│   └── command1
-└── lib/                # Libraries (optional)
-    └── library.so
-```
-
-After installation, a `METADATA` file is created:
-```
-Name: packagename
-Version: 1.0
-Description: Package description
-InstallDate: 2025-11-25 12:34:56
-Filename: packagename-1.0.tar.gz
-Depends: dep1, dep2
-```
-
-### Dependency Management
-
-APT supports automatic dependency resolution:
-
-**Dependency Declaration:**
-In `~/.ushell/repo/index.txt`:
-```
-PackageName: mypackage
-Version: 1.0
-Description: My package
-Depends: basepkg, libpkg
-Filename: mypackage-1.0.tar.gz
-```
-
-**Installing with Dependencies:**
-```bash
-# Manual: Install dependencies first
-apt install basepkg
-apt install libpkg
-apt install mypackage
-
-# Automatic: Use --auto-install flag
-apt install mypackage --auto-install
-```
-
-**Circular Dependency Detection:**
-APT detects circular dependencies and prevents infinite loops:
-```bash
-apt install circpkg --auto-install
-# Output: Circular dependency detected: circpkg -> dep1 -> circpkg
-#         Cannot resolve dependencies due to circular dependency
-```
-
-### PATH Integration
-
-Installed package binaries are automatically added to PATH on shell startup:
-```bash
-# After installing a package with bin/mycommand
+# Run interactive shell
 ./ushell
 
-# The command is now available
-mycommand
+# Run with script
+./ushell < script.sh
+
+# Run with command
+echo "echo hello world" | ./ushell
 ```
 
-### Package Removal Safety
-
-APT warns about dependent packages before removal:
+### Quick Test
 ```bash
-apt remove basepkg
-# Output: WARNING: The following packages depend on 'basepkg':
-#           mypackage, otherpkg
-#         
-#         Removing 'basepkg' may break these packages.
-#         Consider removing dependent packages first, or use --force flag.
-```
-
-Use `--force` to bypass warnings:
-```bash
-apt remove basepkg --force
-# Skips dependent checking
-```
-
-### APT Commands Reference
-
-| Command | Description | Flags |
-|---------|-------------|-------|
-| `apt init` | Initialize package system | - |
-| `apt update` | Refresh package index | - |
-| `apt list` | List packages | `--installed` |
-| `apt search <term>` | Search for packages | - |
-| `apt show <pkg>` | Show package details | - |
-| `apt install <pkg>` | Install a package | `--auto-install` |
-| `apt remove <pkg>` | Remove a package | `--force` |
-| `apt verify <pkg>` | Verify package integrity | - |
-| `apt help` | Show APT help | - |
-
-## Build Instructions
-
-### Requirements
-- GCC compiler
-- GNU Make
-- Standard C library
-- POSIX environment (Linux, macOS, Unix)
-
-### Building
-
-```bash
-# Full build (shell + all tools)
-make
-
-# Build only the shell
-make ushell
-
-# Clean build artifacts
-make clean
-
-# Rebuild from scratch
-make clean && make
-```
-
-### Build Output
-- **ushell** - Main shell executable (~260KB)
-- **Tool binaries** - 10 integrated utilities (in src/tools/)
-- **Object files** - Compiled modules (*.o)
-
-### Compilation Flags
-- `-Wall -Wextra` - All warnings enabled
-- `-g` - Debug symbols included
-- `-pthread` - Thread support for future extensions
-
-## Testing
-
-### Test Suites
-
-The project includes comprehensive testing:
-
-1. **Syntax Tests (20 tests)** - Parser validation
-   ```bash
-   cd tests/syntax
-   ./run_syntax_tests.sh
-   ```
-
-2. **Semantic Tests (10 tests)** - Execution validation
-   ```bash
-   cd tests/semantic
-   ./run_sem_tests.sh
-   ```
-
-3. **Integration Tests (14 tests)** - End-to-end scenarios
-   ```bash
-   cd tests/integration
-   ./run_integration_tests.sh
-   ```
-
-4. **Memory Tests (10 tests)** - Valgrind leak detection
-   ```bash
-   cd tests
-   ./valgrind_test.sh
-   ```
-
-### Test Results
-
-DONE **44/44 functional tests passing**  
-DONE **10/10 memory tests passing (0 leaks)**  
-DONE **Valgrind clean** - All memory properly freed
-
-### Manual Testing
-
-```bash
-# Start the shell
+# Start shell
 ./ushell
 
-# Test variables
-set X=10
-set Y=20
-echo X=$X, Y=$Y
+# Try basic commands
+unified-shell> echo Hello World
+Hello World
 
-# Test arithmetic
-echo Result: $((X + Y))
+# Variables
+unified-shell> export name=Alice
+unified-shell> echo Hello, $name
+Hello, Alice
 
-# Test conditionals
-if myls /tmp then echo Found /tmp fi
+# Arithmetic
+unified-shell> export x=10
+unified-shell> export y=$((x * 2 + 5))
+unified-shell> echo $y
+25
 
-# Test pipelines
-myls | myfd .c | mycat
+# Conditionals
+unified-shell> if /bin/true then echo Success fi
+Success
 
-# Test glob expansion
-echo *.c
-myls test*.txt
+# Pipelines
+unified-shell> echo -e "apple\nbanana\ncherry" | grep a | sort
+apple
+banana
 
-# Test I/O redirection
-echo "test data" > output.txt
-mycat < output.txt
-echo "more data" >> output.txt
+# File operations
+unified-shell> echo "test content" > test.txt
+unified-shell> mycat test.txt
+test content
+
+# Wildcards
+unified-shell> echo *.txt
+test.txt output.txt result.txt
+
+# Exit
+unified-shell> exit
 ```
 
-## Architecture Overview
+---
 
-### High-Level Design
-
-```
-User Input → Lexer → Parser → AST → Evaluator → Executor
-                                        ↓
-                              ┌─────────┴─────────┐
-                              ↓                   ↓
-                          Built-ins           External Commands
-                              ↓                   ↓
-                          (cd, echo, ...)    (fork/exec)
-```
-
-### Key Components
-
-1. **Parser (BNFC-generated)**
-   - Lexical analysis: `Grammar.l` (Flex)
-   - Syntax analysis: `Grammar.y` (Bison)
-   - Abstract syntax tree: `Absyn.c/h`
-
-2. **Evaluator**
-   - Command evaluation: `evaluator.c`
-   - Variable expansion: `expansion.c`
-   - Expression evaluation: `arithmetic.c`
-   - Conditional execution: `conditional.c`
-
-3. **Executor**
-   - Process management: `executor.c`
-   - Pipeline handling: Multi-fork coordination
-   - I/O redirection: dup2() management
-
-4. **Built-ins**
-   - Command table: `builtins.c`
-   - Individual implementations: cd, pwd, echo, history, edi, apt, etc.
-   - Integrated text editor: `builtin_edi.c` (731 lines)
-   - Package manager: `apt_builtin.c` with full subcommand support
-
-5. **Package Management (APT)**
-   - Repository system: `apt/repo.c` (package index, metadata)
-   - Installation engine: `apt/install.c` (extraction, PATH setup)
-   - Removal system: `apt/remove.c` (recursive removal, verification)
-   - Dependency resolver: `apt/depends.c` (circular detection, auto-install)
-   - Directory structure: `~/.ushell/` (packages, repo, available, cache)
-   - Features: dependency resolution, integrity checking, force removal
-
-6. **Tools Integration**
-   - Argtable3-based argument parsing
-   - 10 filesystem utilities with full option support
-   - Shared environment access
-   - Tool dispatcher: `tool_dispatch.c`
-
-7. **Glob Engine**
-   - Pattern matching: `glob.c`
-   - Wildcard expansion: *, ?, [...]
-   - Directory traversal
-
-8. **Interactive System**
-   - Terminal management: `terminal.c` (raw mode, ANSI escapes)
-   - Command history: `history.c` (persistent to ~/.ushell_history)
-   - Tab completion: `completion.c` (commands and filenames)
-   - Line editing with multi-line wrapping support
-
-### Memory Management
-
-- **Parser**: Tree-based allocation with cleanup functions
-- **Environment**: Hash table with dynamic string allocation
-- **Executor**: Temporary buffers freed after each command
-- **Cleanup**: atexit() handlers ensure no leaks
-
-## Documentation
-
-- **[User Guide](docs/USER_GUIDE.md)** - Comprehensive usage documentation
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Architecture and contribution guide
-- **[Example Scripts](examples/)** - Sample code and tutorials
-- [Implementation Plan](../Plan.md) - Step-by-step roadmap
-- [Implementation Prompts](../Prompts.md) - Development history
-
-## Examples
-
-See the [examples/](examples/) directory for:
-- `example_scripts.sh` - Basic command examples
-- `tutorial.txt` - Step-by-step tutorial
-- `advanced_examples.sh` - Complex use cases
-
-## Directory Structure
+## Project Structure
 
 ```
 unified-shell/
 ├── src/
-│   ├── parser/         # BNFC-generated parser (Grammar.cf)
-│   ├── evaluator/      # Command evaluation & execution
-│   │   ├── environment.c   # Variable storage
-│   │   ├── executor.c      # Command/pipeline execution
-│   │   ├── conditional.c   # If/then/else logic
-│   │   └── arithmetic.c    # Arithmetic evaluation
-│   ├── builtins/       # Built-in command implementations
-│   │   ├── builtins.c      # Dispatch table
-│   │   └── builtin_edi.c   # Integrated text editor
-│   ├── apt/            # Package management system
-│   │   ├── apt_builtin.c   # APT command dispatcher
-│   │   ├── repo.c          # Repository & index management
-│   │   ├── install.c       # Package installation engine
-│   │   ├── remove.c        # Package removal & verification
-│   │   └── depends.c       # Dependency resolution system
-│   ├── tools/          # 10 integrated utilities (argtable3-based)
-│   ├── glob/           # Wildcard expansion engine
-│   ├── utils/          # Helper functions
-│   │   ├── expansion.c     # Variable expansion
-│   │   ├── terminal.c      # Interactive input handling
-│   │   ├── history.c       # Command history
-│   │   ├── completion.c    # Tab completion
-│   │   └── arg_parser.c    # Argument parsing utilities
-│   ├── argtable3/      # Third-party argument parsing library
-│   └── main.c          # REPL and main loop
-├── include/            # Public header files
-├── tests/
-│   ├── syntax/         # Parser tests (20)
-│   ├── semantic/       # Execution tests (10)
-│   ├── integration/    # End-to-end tests (14)
-│   └── valgrind_test.sh # Memory leak tests (10)
-├── docs/
-│   ├── USER_GUIDE.md        # User documentation
-│   └── DEVELOPER_GUIDE.md   # Developer documentation
-├── examples/           # Sample scripts and tutorials
-├── Makefile           # Build system
-└── README.md          # This file
+│   ├── main.c                 # REPL and main entry point
+│   ├── parser/                # BNFC-generated parser
+│   │   ├── Grammar.cf         # BNF grammar definition
+│   │   ├── Parser.c/h         # Generated parser
+│   │   ├── Lexer.c            # Generated lexer
+│   │   └── Absyn.c/h          # Abstract syntax tree
+│   ├── evaluator/             # Command evaluation
+│   │   ├── executor.c         # Fork/exec logic
+│   │   ├── environment.c      # Variable storage
+│   │   ├── conditional.c      # If/then/else evaluation
+│   │   └── arithmetic.c       # Arithmetic expression parsing
+│   ├── builtins/              # Built-in commands
+│   │   └── builtins.c         # cd, pwd, echo, export, etc.
+│   ├── tools/                 # Integrated utilities
+│   │   ├── tool_dispatch.c    # Tool routing
+│   │   ├── myls.c             # Directory listing
+│   │   ├── mycat.c            # File display
+│   │   ├── mycp.c, mymv.c     # File operations
+│   │   ├── myrm.c             # File deletion
+│   │   ├── mymkdir.c, myrmdir.c  # Directory operations
+│   │   ├── mytouch.c          # File creation
+│   │   ├── mystat.c           # File info
+│   │   ├── myfd.c             # File finder
+│   │   └── editor.c           # Text editor
+│   ├── glob/                  # Wildcard expansion
+│   │   └── glob.c             # Pattern matching
+│   └── utils/                 # Helper functions
+│       └── expansion.c        # Variable expansion
+├── include/                   # Header files
+├── tests/                     # Test suite
+│   ├── test_runner.sh         # Main test script
+│   ├── unit/                  # Unit tests
+│   └── integration/           # Integration tests
+├── docs/                      # Documentation
+│   ├── USER_GUIDE.md          # User documentation
+│   └── DEVELOPER_GUIDE.md     # Developer documentation
+├── examples/                  # Example scripts
+├── Makefile                   # Build configuration
+└── README.md                  # This file
 ```
 
-## Contributing
+---
 
-### Code Style
-- K&R style indentation (4 spaces)
-- Function names: lowercase_with_underscores
-- Constants: UPPERCASE_WITH_UNDERSCORES
-- Comprehensive comments for complex logic
+## Testing
 
-### Adding Features
-1. Update grammar in `src/parser/Grammar.cf` if needed
-2. Regenerate parser: `cd src/parser && make`
-3. Add evaluation logic in `src/evaluator/`
-4. Add tests in appropriate `tests/` subdirectory
-5. Update documentation
+### Run Test Suite
+```bash
+cd tests
+./test_runner.sh
+```
 
-### Testing Requirements
-- All new features must include tests
-- Run full test suite before submitting
-- Verify valgrind clean (no memory leaks)
-- Test on Linux environment
+### Individual Test Categories
+```bash
+# Unit tests
+cd tests/unit
+./test_env.sh         # Environment/variables
+./test_expansion.sh   # Variable expansion
+./test_glob.sh        # Wildcard expansion
+./test_arithmetic.sh  # Arithmetic evaluation
 
-See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed information.
+# Integration tests
+cd tests/integration
+./test_pipelines.sh      # Pipeline execution
+./test_conditionals.sh   # If/then/else
+./test_tools.sh          # All built-in tools
+./test_redirection.sh    # I/O redirection
+```
 
-## Known Limitations
+### Memory Testing
+```bash
+# Run with valgrind
+echo "echo test; exit" | valgrind --leak-check=full ./ushell
 
-- No job control (background processes with &)
-- No alias or function definitions
-- Single-threaded execution
-- Limited to POSIX systems
-- Very long lines (>200 chars) may have display artifacts on some terminals
+# Or use test script
+cd tests
+./valgrind_test.sh
+```
 
-## Future Enhancements
+---
 
-Potential improvements:
-- Background job control (& operator)
-- Scripting mode (execute from file)
-- Configuration file (~/.ushellrc)
-- Additional built-ins (alias, functions)
-- Signal forwarding to child processes
-- More sophisticated terminal width detection
+## 📖 Usage Examples
+
+### Variables and Arithmetic
+```bash
+# Variable assignment
+export x=10
+export name="Alice"
+
+# Variable expansion
+echo $x
+echo Hello, $name
+
+# Arithmetic
+export result=$((5 + 3))
+export area=$((width * height))
+echo $result
+
+# Complex expressions
+export a=10
+export b=20
+export sum=$(($a + $b))
+export product=$(($a * $b))
+```
+
+### Conditionals
+```bash
+# Simple if/then
+if /bin/true then echo Success fi
+
+# If/else
+if /bin/false then echo Yes else echo No fi
+
+# With variables
+export status=0
+if test $status -eq 0 then echo OK else echo FAIL fi
+
+# Command-based conditions
+if myls README.md then echo "File exists" fi
+```
+
+### Pipelines and Redirection
+```bash
+# Simple pipeline
+echo hello | cat
+
+# Multi-stage pipeline
+myls | grep .txt | sort
+
+# Input redirection
+mycat < input.txt
+
+# Output redirection
+echo "output" > file.txt
+
+# Append redirection
+echo "more" >> file.txt
+
+# Combined
+mycat < input.txt | grep pattern > output.txt
+```
+
+### Wildcards
+```bash
+# Match all .txt files
+echo *.txt
+
+# Match single character
+echo file?.txt
+
+# Character class
+echo file[123].txt
+
+# Range
+echo [a-z]*.txt
+
+# Negation
+echo file[!0-9].txt
+
+# Use with commands
+mycat *.txt
+myrm temp*
+myls dir[0-9]
+```
+
+### Job Control
+```bash
+# Run command in background
+sleep 10 &
+[1] 12345
+
+# Start multiple background jobs
+find / -name "*.txt" > results.txt 2>&1 &
+tar czf archive.tar.gz largedir/ &
+
+# List all jobs
+jobs
+# [1]   Running                 sleep 10 &
+# [2]-  Running                 find / -name "*.txt" > results.txt 2>&1 &
+# [3]+  Running                 tar czf archive.tar.gz largedir/ &
+
+# Bring job to foreground
+fg %1
+
+# Resume stopped job in background
+bg %2
+
+# Stop foreground job with Ctrl+Z
+sleep 60
+^Z
+[1]+  Stopped                 sleep 60
+
+# Resume it in background
+bg %1
+[1]+ sleep 60 &
+
+# Signal handling
+# - Ctrl+C: Terminates foreground job only (shell is immune)
+# - Ctrl+Z: Stops foreground job only (shell continues)
+```
+
+### File Operations
+```bash
+# List directory
+myls
+myls -la /tmp
+
+# Display file
+mycat file.txt
+
+# Copy files
+mycp source.txt dest.txt
+mycp -r dir1 dir2
+
+# Move/rename
+mymv old.txt new.txt
+
+# Delete
+myrm file.txt
+myrm -r directory
+
+# Create directory
+mymkdir newdir
+mymkdir -p path/to/nested/dir
+
+# Create file
+mytouch newfile.txt
+
+# File info
+mystat file.txt
+
+# Find files
+myfd *.c
+myfd -r pattern
+```
+
+### Text Editor
+```bash
+# Edit existing file
+edi file.txt
+
+# Create new file
+edi newfile.txt
+
+# Editor commands (in COMMAND mode):
+# :w         - Save
+# :w file    - Save as
+# :q         - Quit
+# :wq        - Save and quit
+# :q!        - Quit without saving
+```
+
+---
+
+## Architecture
+
+### Component Overview
+
+#### 1. **Parser** (src/parser/)
+- BNFC-generated LL parser from Grammar.cf
+- Produces abstract syntax tree (AST)
+- Handles syntax errors gracefully
+- Supports: commands, variables, conditionals, pipelines, redirection
+
+#### 2. **Evaluator** (src/evaluator/)
+- Traverses AST and executes commands
+- Manages variable environment
+- Handles arithmetic evaluation
+- Implements conditional logic
+- Performs glob expansion
+
+#### 3. **Executor** (src/evaluator/executor.c)
+- Fork/exec process management
+- Pipeline construction with pipe()
+- I/O redirection with dup2()
+- Wait for child processes
+- Capture exit codes
+
+#### 4. **Built-ins** (src/builtins/)
+- Commands that must run in parent process (cd, export)
+- Executed before fork
+- Direct access to shell environment
+
+#### 5. **Tools** (src/tools/)
+- Filesystem utilities integrated as built-ins
+- Function dispatch instead of exec
+- Faster execution (no fork overhead)
+- Consistent error handling
+
+#### 6. **Glob Expansion** (src/glob/)
+- Pattern matching: *, ?, [abc], [a-z], [!abc]
+- Directory scanning
+- Recursive matching (optional)
+- Sort results alphabetically
+
+### Data Flow
+```
+User Input
+    ↓
+[Lexer/Parser] → AST
+    ↓
+[Variable Expansion] → Expand $var
+    ↓
+[Glob Expansion] → Expand *.txt
+    ↓
+[Built-in Check] → Run in parent if built-in
+    ↓
+[Tool Check] → Dispatch to tool function
+    ↓
+[Fork/Exec] → Execute external command
+    ↓
+[Wait/Collect] → Capture exit status
+    ↓
+Output/Status
+```
+
+---
+
+## Building from Source
+
+### Manual Build
+```bash
+# Generate parser (if using BNFC)
+cd src/parser
+bnfc -c --makefile Grammar.cf
+make
+
+# Compile shell
+cd ../..
+gcc -Wall -Wextra -g -Iinclude \
+    src/main.c \
+    src/parser/*.c \
+    src/evaluator/*.c \
+    src/builtins/*.c \
+    src/tools/*.c \
+    src/glob/*.c \
+    src/utils/*.c \
+    -o ushell
+```
+
+### Makefile Targets
+```bash
+make          # Build shell
+make clean    # Remove build artifacts
+make test     # Run test suite
+make valgrind # Run with memory checker
+make install  # Install to system (requires sudo)
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Ensure all tests pass
+6. Submit a pull request
+
+See `docs/DEVELOPER_GUIDE.md` for detailed contribution guidelines.
+
+---
+
+## Documentation
+
+- **User Guide**: `docs/USER_GUIDE.md` - Comprehensive usage documentation
+- **Developer Guide**: `docs/DEVELOPER_GUIDE.md` - Architecture and code documentation
+- **Plan**: `Plan.md` - Implementation roadmap
+- **Prompts**: `Prompts.md` - Step-by-step implementation guide with tests
+- **AI Interaction Log**: `AI_Interaction_ShellBuild.md` - Development history
+
+---
 
 ## Project Status
 
-**Current Version**: 1.0.0  
-**Build Date**: November 2025  
+### Implemented Features (DONE)
+- DONE Basic REPL
+- DONE Command execution (fork/exec)
+- DONE Variable assignment and expansion
+- DONE Arithmetic evaluation
+- DONE Conditionals (if/then/else/fi)
+- DONE Pipelines (multi-stage)
+- DONE I/O redirection (<, >, >>)
+- DONE Built-in commands (cd, pwd, echo, export, exit)
+- DONE All filesystem tools integrated
+- DONE Text editor integrated
+- DONE Wildcard/glob expansion
+- DONE Memory safety (valgrind clean)
+- DONE Comprehensive test suite
+- DONE **Job Control** - Background jobs (&), job management (jobs, fg, bg), signal handling (Ctrl+C, Ctrl+Z)
+
+### Future Enhancements (NOT-DONE)
+- NOT-DONE Command history (readline integration)
+- NOT-DONE Tab completion
+- NOT-DONE Aliases
+- NOT-DONE Functions
+- NOT-DONE Loops (for, while)
+- NOT-DONE Subshell execution (command substitution with backticks)
+- NOT-DONE Brace expansion ({a,b,c})
+- NOT-DONE Tilde expansion (~)
+
+---
+
+## Known Issues
+
+None at this time. See GitHub Issues for bug reports and feature requests.
+
+---
+
+## 📄 License
+
+This project is released for educational purposes. See LICENSE file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+This project combines and extends work from:
+- **ShellByGrammar** - Grammar-based shell parser with BNFC
+- **StandAloneTools** - Custom filesystem utilities and text editor
+- **shell.c** - Original fork/exec shell implementation
+
+Special thanks to the BNFC project for the excellent parser generator.
+
+---
+
+## 📧 Contact
+
+For questions, issues, or contributions, please open an issue on GitHub or contact the maintainer.
+
+---
+
+## Version
+
+**Version**: 1.0.0  
+**Last Updated**: November 19, 2025  
 **Status**: Production Ready
 
-### Implementation Progress
-- DONE All 20 prompts completed
-- DONE All features implemented
-- DONE All tests passing
-- DONE Memory leak-free
-- DONE Documentation complete
+---
 
-## License
+## Quick Reference Card
 
-Educational project for UCSC Silicon Valley Linux Systems coursework.
+```bash
+# Variables
+export var=value          # Set variable
+echo $var                 # Expand variable
+result=$((expr))          # Arithmetic
 
-## Acknowledgments
+# Control Flow
+if cmd then cmds fi       # Conditional
+if cmd then cmds else cmds fi  # If/else
 
-- BNFC (BNF Converter) for parser generation
-- GNU tools (GCC, Make, Flex, Bison)
-- POSIX standards for system call interfaces
+# Pipelines & Redirection
+cmd1 | cmd2               # Pipeline
+cmd < file                # Input redirect
+cmd > file                # Output redirect
+cmd >> file               # Append redirect
 
-## Contact
+# Wildcards
+*                         # Match any characters
+?                         # Match single character
+[abc]                     # Match a, b, or c
+[a-z]                     # Match range
+[!abc]                    # Match anything except a, b, c
 
-For questions or contributions, please refer to the project documentation or contact the course instructor.
+# Built-in Commands
+cd, pwd, echo, export, set, exit, help, version
+
+# File Tools
+myls, mycat, mycp, mymv, myrm, mymkdir, myrmdir, mytouch, mystat, myfd
+
+# Editor
+edi file.txt              # Edit file
+# :w, :q, :wq, :q!        # Command mode
+```
+
+---
+
+**Happy Shell Scripting!**
