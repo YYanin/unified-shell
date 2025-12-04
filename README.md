@@ -154,6 +154,83 @@ pwd
 exit
 ```
 
+## AI Integration
+
+The unified shell includes AI-powered command suggestions using natural language queries.
+
+### Quick Start with AI
+
+```bash
+# Ask the AI for command suggestions using @ prefix
+@list all python files
+
+# The AI suggests a command
+AI Suggestion: find . -name "*.py"
+
+# Confirm to execute
+Execute this command? (y/n/e): y
+```
+
+**Confirmation Options:**
+- `y` - Execute the suggested command
+- `n` - Cancel, return to prompt  
+- `e` - Edit the suggestion before executing
+
+### Configuration
+
+**Heuristic Mode (Free, No Setup):**
+```bash
+# Set AI helper path
+export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
+
+# Start using @ queries immediately
+./ushell
+@list files
+```
+
+**OpenAI Mode (Intelligent, Requires API Key):**
+```bash
+# Get API key from https://platform.openai.com/api-keys
+export OPENAI_API_KEY="sk-your-api-key-here"
+export USHELL_LLM_MODEL="gpt-4o-mini"  # Optional, default model
+export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
+
+./ushell
+@find all files larger than 1MB modified in last week
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENAI_API_KEY` | OpenAI API key (optional) | None |
+| `USHELL_LLM_MODEL` | AI model to use | `gpt-4o-mini` |
+| `USHELL_AI_HELPER` | Path to AI helper script | `./aiIntegr/ushell_ai.py` |
+| `USHELL_AI_DEBUG` | Enable debug output | `0` |
+| `USHELL_AI_CONTEXT` | Share shell state with AI | `1` |
+
+### Example Queries
+
+```bash
+@list all c files in src directory
+@show files modified today
+@count lines in main.c
+@create a backup directory
+@find executable files
+@show disk usage
+```
+
+### Features
+
+- **Dual Mode**: Heuristic (free) or OpenAI-powered (intelligent)
+- **Safe by Default**: User confirmation required before execution
+- **Command Catalog**: AI knows all built-in and tool commands
+- **Context-Aware**: Optional shell state for better suggestions
+- **Privacy Controls**: Transparent data usage, opt-out available
+- **Cost Effective**: ~$0.0001-$0.0003 per query with gpt-4o-mini
+
+For detailed documentation, see [aiIntegr/README.md](aiIntegr/README.md).
+
 ## Job Control
 
 The unified shell includes comprehensive job control for managing background and stopped processes.

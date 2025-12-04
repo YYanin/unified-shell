@@ -9,8 +9,8 @@
 
 static Env *completion_env = NULL;
 
-// Built-in command names
-static const char *builtin_commands[] = {
+// Built-in command names for tab completion
+static const char *builtin_command_names[] = {
     "cd", "pwd", "echo", "export", "exit", "set", "unset", 
     "env", "help", "version", "history", "edi",
     "myls", "mycat", "mycp", "mymv", "myrm", 
@@ -44,7 +44,7 @@ char** completion_get_commands(int *count) {
     }
     
     // Add built-in commands
-    for (int i = 0; builtin_commands[i] != NULL; i++) {
+    for (int i = 0; builtin_command_names[i] != NULL; i++) {
         if (cnt >= capacity - 1) {
             capacity *= 2;
             char **new_cmds = realloc(commands, capacity * sizeof(char*));
@@ -55,7 +55,7 @@ char** completion_get_commands(int *count) {
             }
             commands = new_cmds;
         }
-        commands[cnt++] = strdup(builtin_commands[i]);
+        commands[cnt++] = strdup(builtin_command_names[i]);
     }
     
     commands[cnt] = NULL;

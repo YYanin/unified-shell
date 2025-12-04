@@ -45,5 +45,6 @@ int builtin_apt(char **argv, Env *env);
 int builtin_jobs(char **argv, Env *env);
 int builtin_fg(char **argv, Env *env);
 int builtin_bg(char **argv, Env *env);
+int builtin_commands(char **argv, Env *env);
 
 #endif /* BUILTINS_H */

@@ -2320,6 +2320,187 @@ history
 
 ---
 
+## AI-Assisted Command Suggestions
+
+### Overview
+
+Unified shell includes an AI helper that can translate natural language queries into shell commands. This feature helps you discover commands and correct syntax without leaving the shell.
+
+### Basic Usage
+
+Start any line with `@` to ask for a command suggestion:
+
+```bash
+ushell:~> @list all C files
+Suggestion: myfd .c
+Accept? [y/n/e]:
+```
+
+The shell will:
+1. Send your query to the AI helper
+2. Display the suggested command
+3. Ask for confirmation before executing
+
+### Confirmation Options
+
+When presented with a suggestion, you have three choices:
+
+- **y (yes)**: Execute the suggested command immediately
+- **n (no)**: Discard the suggestion and return to the prompt
+- **e (edit)**: View the suggestion and type your own edited version
+
+**Example of editing:**
+```bash
+ushell:~> @remove all log files
+Suggestion: myrm *.log
+Accept? [y/n/e]: e
+Original: myrm *.log
+Enter edited command: myrm old_*.log
+```
+
+### Shell State Context
+
+By default, the AI helper receives context about your current shell session to provide better suggestions:
+
+- Current working directory
+- Username
+- Recent command history (last 5 commands)
+- Environment variables (excluding sensitive ones)
+
+**Context-aware example:**
+```bash
+ushell:~/Documents> @show files here
+# AI knows you're in ~/Documents and suggests:
+Suggestion: myls
+```
+
+### Privacy Controls
+
+#### Disabling Context Sharing
+
+If you prefer not to share shell state with the AI helper, set `USHELL_AI_CONTEXT=0`:
+
+```bash
+export USHELL_AI_CONTEXT=0
+```
+
+This disables all context collection and sharing. Only your natural language query will be sent to the AI helper.
+
+#### What's Excluded Automatically
+
+Even with context enabled, the shell automatically filters out sensitive information:
+
+- Environment variables containing: PASSWORD, TOKEN, KEY, SECRET, CREDENTIAL
+- Values are truncated to 200 characters maximum
+- Only recent commands (not full history) are included
+
+### Configuration
+
+#### AI Helper Script Location
+
+Set `USHELL_AI_HELPER` to specify a custom AI helper script:
+
+```bash
+export USHELL_AI_HELPER=/path/to/custom_ai.py
+```
+
+Default: `./aiIntegr/ushell_ai.py`
+
+#### OpenAI Integration (Optional)
+
+For enhanced suggestions using OpenAI models:
+
+```bash
+# Install OpenAI Python package
+pip install openai
+
+# Set API key
+export OPENAI_API_KEY="your-api-key-here"
+
+# Optional: specify model (default: gpt-4o-mini)
+export USHELL_LLM_MODEL="gpt-4o"
+```
+
+Without an API key, the AI helper uses built-in heuristic matching (no network required).
+
+#### Debug Mode
+
+Enable debug output to see what's happening behind the scenes:
+
+```bash
+export USHELL_AI_DEBUG=1
+```
+
+Debug messages appear on stderr showing:
+- Catalog loading
+- Context generation
+- Suggestion selection process
+
+### How It Works
+
+1. **Query Detection**: Shell detects `@` prefix and extracts your query
+2. **Context Collection**: If enabled, gathers current shell state as JSON
+3. **AI Helper Call**: Executes Python script with query and optional context
+4. **Suggestion**: Helper returns single command line suggestion
+5. **Confirmation**: Shell prompts you to accept, reject, or edit
+6. **Execution**: On acceptance, command runs through normal shell pipeline
+7. **History**: Both query and executed command are saved to history
+
+### Tips for Best Results
+
+1. **Be specific**: "list C files" is better than "show files"
+2. **Use natural language**: "copy file.txt to backup" works well
+3. **Context helps**: AI knows your current directory and recent commands
+4. **Edit when needed**: Use 'e' option to refine suggestions
+5. **Privacy first**: Disable context if working with sensitive data
+
+### Example Queries
+
+```bash
+# File operations
+@list all files
+@copy readme to backup
+@remove old log files
+@create a new directory called test
+
+# Navigation
+@go to home directory
+@show current path
+
+# Search
+@find all Python files
+@search for TODO in source files
+
+# Package management (if apt is available)
+@search for git package
+@install python
+
+# System info
+@show environment variables
+@list recent commands
+```
+
+### Troubleshooting
+
+**"AI helper not found"**
+- Check that `aiIntegr/ushell_ai.py` exists and is executable
+- Or set `USHELL_AI_HELPER` to correct path
+
+**"AI helper produced no output"**
+- Try enabling debug mode: `export USHELL_AI_DEBUG=1`
+- Check that Python 3 is available: `python3 --version`
+
+**Poor suggestions**
+- Be more specific in your query
+- Consider installing OpenAI package for better results
+- Use 'e' option to edit suggestions
+
+**Context not working**
+- Verify `USHELL_AI_CONTEXT` is not set to 0
+- Enable debug mode to see context generation
+
+---
+
 ## Summary
 
 ### Quick Reference

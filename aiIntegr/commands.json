@@ -1,0 +1,570 @@
+{
+  "commands": [
+    {
+      "name": "cd",
+      "summary": "Change directory",
+      "description": "Change the current working directory to the specified path. If no directory is specified, changes to the user's home directory.",
+      "usage": "cd [directory]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "directory",
+          "help": "Target directory path (default: $HOME)"
+        }
+      ]
+    },
+    {
+      "name": "pwd",
+      "summary": "Print working directory",
+      "description": "Display the absolute path of the current working directory.",
+      "usage": "pwd",
+      "options": []
+    },
+    {
+      "name": "echo",
+      "summary": "Display arguments",
+      "description": "Print the given arguments to standard output. Supports variable expansion using $VAR or ${VAR} syntax.",
+      "usage": "echo [args...]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "args",
+          "help": "Text and variables to display"
+        }
+      ]
+    },
+    {
+      "name": "export",
+      "summary": "Set and export environment variable",
+      "description": "Set a shell variable and export it to child processes. Variables are available to all executed commands.",
+      "usage": "export VAR=value",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "VAR=value",
+          "help": "Variable name and value to export"
+        }
+      ]
+    },
+    {
+      "name": "set",
+      "summary": "Set shell-local variable",
+      "description": "Set a shell-local variable that is only available within the shell, not exported to child processes.",
+      "usage": "set VAR=value",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "VAR=value",
+          "help": "Variable name and value to set"
+        }
+      ]
+    },
+    {
+      "name": "unset",
+      "summary": "Remove variable",
+      "description": "Delete a shell variable or environment variable.",
+      "usage": "unset VAR",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "VAR",
+          "help": "Variable name to remove"
+        }
+      ]
+    },
+    {
+      "name": "env",
+      "summary": "Display all environment variables",
+      "description": "List all currently set environment variables and their values.",
+      "usage": "env",
+      "options": []
+    },
+    {
+      "name": "help",
+      "summary": "Display comprehensive help message",
+      "description": "Show detailed help information about the shell, including all built-in commands, features, and usage examples.",
+      "usage": "help",
+      "options": []
+    },
+    {
+      "name": "version",
+      "summary": "Show version and build information",
+      "description": "Display the shell version number and build details.",
+      "usage": "version",
+      "options": []
+    },
+    {
+      "name": "history",
+      "summary": "Show command history",
+      "description": "Display the list of previously executed commands from the current and past sessions.",
+      "usage": "history",
+      "options": []
+    },
+    {
+      "name": "edi",
+      "summary": "Vi-like text editor",
+      "description": "Modal text editor with normal, insert, and command modes. Similar to vi/vim but simplified for the shell.",
+      "usage": "edi [file]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "file",
+          "help": "File to edit (optional)"
+        }
+      ]
+    },
+    {
+      "name": "exit",
+      "summary": "Exit the shell",
+      "description": "Terminate the shell session and return to the parent process.",
+      "usage": "exit",
+      "options": []
+    },
+    {
+      "name": "jobs",
+      "summary": "List background jobs",
+      "description": "Display information about background and stopped jobs.",
+      "usage": "jobs [-l|-p|-r|-s]",
+      "options": [
+        {
+          "short": "-l",
+          "long": null,
+          "arg": null,
+          "help": "Long format with PID and status"
+        },
+        {
+          "short": "-p",
+          "long": null,
+          "arg": null,
+          "help": "Show only process IDs"
+        },
+        {
+          "short": "-r",
+          "long": null,
+          "arg": null,
+          "help": "Show only running jobs"
+        },
+        {
+          "short": "-s",
+          "long": null,
+          "arg": null,
+          "help": "Show only stopped jobs"
+        }
+      ]
+    },
+    {
+      "name": "fg",
+      "summary": "Bring job to foreground",
+      "description": "Resume a background or stopped job in the foreground. Job can be specified by job number using %n syntax.",
+      "usage": "fg [%n]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "%n",
+          "help": "Job number (default: most recent job)"
+        }
+      ]
+    },
+    {
+      "name": "bg",
+      "summary": "Resume job in background",
+      "description": "Resume a stopped job in the background. Job can be specified by job number using %n syntax.",
+      "usage": "bg [%n]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "%n",
+          "help": "Job number (default: most recent stopped job)"
+        }
+      ]
+    },
+    {
+      "name": "apt",
+      "summary": "Package manager",
+      "description": "Local package management system similar to Debian's APT. Supports package installation, removal, searching, and dependency resolution.",
+      "usage": "apt <subcommand> [options]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "subcommand",
+          "help": "One of: init, update, list, search, show, install, remove, verify"
+        }
+      ]
+    },
+    {
+      "name": "apt init",
+      "summary": "Initialize package repository",
+      "description": "Create and initialize the local package repository database.",
+      "usage": "apt init",
+      "options": []
+    },
+    {
+      "name": "apt update",
+      "summary": "Update package index",
+      "description": "Refresh the local package database with latest package information.",
+      "usage": "apt update",
+      "options": []
+    },
+    {
+      "name": "apt list",
+      "summary": "List available packages",
+      "description": "Display all packages available in the repository.",
+      "usage": "apt list",
+      "options": []
+    },
+    {
+      "name": "apt search",
+      "summary": "Search for packages",
+      "description": "Search package names and descriptions for the given pattern.",
+      "usage": "apt search <pattern>",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "pattern",
+          "help": "Search pattern to match against package names and descriptions"
+        }
+      ]
+    },
+    {
+      "name": "apt show",
+      "summary": "Show package details",
+      "description": "Display detailed information about a specific package, including version, dependencies, and description.",
+      "usage": "apt show <package>",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "package",
+          "help": "Package name to show details for"
+        }
+      ]
+    },
+    {
+      "name": "apt install",
+      "summary": "Install package",
+      "description": "Install a package and its dependencies. Use --auto-install to automatically install dependencies without prompting.",
+      "usage": "apt install <package> [--auto-install]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "package",
+          "help": "Package name to install"
+        },
+        {
+          "short": null,
+          "long": "--auto-install",
+          "arg": null,
+          "help": "Automatically install dependencies without prompting"
+        }
+      ]
+    },
+    {
+      "name": "apt remove",
+      "summary": "Remove package",
+      "description": "Uninstall a package. Use --force to bypass warnings about dependent packages.",
+      "usage": "apt remove <package> [--force]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "package",
+          "help": "Package name to remove"
+        },
+        {
+          "short": null,
+          "long": "--force",
+          "arg": null,
+          "help": "Force removal even if other packages depend on it"
+        }
+      ]
+    },
+    {
+      "name": "apt verify",
+      "summary": "Verify installed packages",
+      "description": "Check the integrity of installed packages and report any issues.",
+      "usage": "apt verify",
+      "options": []
+    },
+    {
+      "name": "myls",
+      "summary": "List directory contents",
+      "description": "Custom implementation of ls command to display files and directories in the specified path.",
+      "usage": "myls [directory]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "directory",
+          "help": "Directory to list (default: current directory)"
+        }
+      ]
+    },
+    {
+      "name": "mycat",
+      "summary": "Display file contents",
+      "description": "Read and display the contents of one or more files to standard output.",
+      "usage": "mycat <file>...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "file",
+          "help": "One or more files to display"
+        }
+      ]
+    },
+    {
+      "name": "mycp",
+      "summary": "Copy files",
+      "description": "Copy a file from source to destination. Creates destination file with same contents as source.",
+      "usage": "mycp <source> <dest>",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "source",
+          "help": "Source file to copy"
+        },
+        {
+          "short": null,
+          "long": null,
+          "arg": "dest",
+          "help": "Destination path"
+        }
+      ]
+    },
+    {
+      "name": "mymv",
+      "summary": "Move or rename files",
+      "description": "Move a file to a new location or rename it.",
+      "usage": "mymv <source> <dest>",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "source",
+          "help": "Source file to move"
+        },
+        {
+          "short": null,
+          "long": null,
+          "arg": "dest",
+          "help": "Destination path or new name"
+        }
+      ]
+    },
+    {
+      "name": "myrm",
+      "summary": "Remove files",
+      "description": "Delete one or more files from the filesystem.",
+      "usage": "myrm <file>...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "file",
+          "help": "One or more files to remove"
+        }
+      ]
+    },
+    {
+      "name": "mymkdir",
+      "summary": "Create directories",
+      "description": "Create one or more new directories.",
+      "usage": "mymkdir <directory>...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "directory",
+          "help": "One or more directories to create"
+        }
+      ]
+    },
+    {
+      "name": "myrmdir",
+      "summary": "Remove empty directories",
+      "description": "Delete one or more empty directories. Fails if directory contains files.",
+      "usage": "myrmdir <directory>...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "directory",
+          "help": "One or more empty directories to remove"
+        }
+      ]
+    },
+    {
+      "name": "mytouch",
+      "summary": "Create or update files",
+      "description": "Create new empty files or update the timestamp of existing files.",
+      "usage": "mytouch <file>...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "file",
+          "help": "One or more files to create or touch"
+        }
+      ]
+    },
+    {
+      "name": "mystat",
+      "summary": "Display file status",
+      "description": "Show detailed information about files including size, permissions, timestamps, and inode data.",
+      "usage": "mystat <file>...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "file",
+          "help": "One or more files to display status for"
+        }
+      ]
+    },
+    {
+      "name": "myfd",
+      "summary": "Find files by pattern",
+      "description": "Search for files matching a pattern in the specified directory and its subdirectories.",
+      "usage": "myfd <pattern> [directory]",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "pattern",
+          "help": "Filename pattern to search for"
+        },
+        {
+          "short": null,
+          "long": null,
+          "arg": "directory",
+          "help": "Starting directory (default: current directory)"
+        }
+      ]
+    },
+    {
+      "name": "ls",
+      "summary": "List directory contents (system)",
+      "description": "Standard system ls command for listing files and directories.",
+      "usage": "ls [options] [path]",
+      "options": [
+        {
+          "short": "-l",
+          "long": null,
+          "arg": null,
+          "help": "Use long listing format"
+        },
+        {
+          "short": "-a",
+          "long": null,
+          "arg": null,
+          "help": "Show hidden files"
+        },
+        {
+          "short": "-h",
+          "long": null,
+          "arg": null,
+          "help": "Human-readable sizes"
+        }
+      ]
+    },
+    {
+      "name": "cat",
+      "summary": "Concatenate and display files (system)",
+      "description": "Standard system cat command for displaying file contents.",
+      "usage": "cat [file]...",
+      "options": [
+        {
+          "short": null,
+          "long": null,
+          "arg": "file",
+          "help": "Files to display"
+        }
+      ]
+    },
+    {
+      "name": "grep",
+      "summary": "Search text patterns (system)",
+      "description": "Search for patterns in files using regular expressions.",
+      "usage": "grep [options] pattern [file]...",
+      "options": [
+        {
+          "short": "-i",
+          "long": null,
+          "arg": null,
+          "help": "Ignore case"
+        },
+        {
+          "short": "-r",
+          "long": null,
+          "arg": null,
+          "help": "Recursive search"
+        },
+        {
+          "short": "-n",
+          "long": null,
+          "arg": null,
+          "help": "Show line numbers"
+        }
+      ]
+    },
+    {
+      "name": "find",
+      "summary": "Search for files (system)",
+      "description": "Search for files in a directory hierarchy based on various criteria.",
+      "usage": "find [path] [options]",
+      "options": [
+        {
+          "short": null,
+          "long": "-name",
+          "arg": "pattern",
+          "help": "Search by filename pattern"
+        },
+        {
+          "short": null,
+          "long": "-type",
+          "arg": "type",
+          "help": "Filter by type (f=file, d=directory)"
+        }
+      ]
+    },
+    {
+      "name": "wc",
+      "summary": "Count lines, words, and characters (system)",
+      "description": "Count lines, words, and characters in files.",
+      "usage": "wc [options] [file]...",
+      "options": [
+        {
+          "short": "-l",
+          "long": null,
+          "arg": null,
+          "help": "Count lines only"
+        },
+        {
+          "short": "-w",
+          "long": null,
+          "arg": null,
+          "help": "Count words only"
+        },
+        {
+          "short": "-c",
+          "long": null,
+          "arg": null,
+          "help": "Count characters only"
+        }
+      ]
+    }
+  ]
+}

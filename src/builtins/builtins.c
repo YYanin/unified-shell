@@ -32,6 +32,7 @@ static Builtin builtins[] = {
     {"jobs", builtin_jobs},
     {"fg", builtin_fg},
     {"bg", builtin_bg},
+    {"commands", builtin_commands},
     {NULL, NULL}  // Sentinel
 };
 
@@ -267,6 +268,13 @@ int builtin_help(char **argv, Env *env) {
     printf("  cmd &              Run command in background\n");
     printf("\nIntegrated Tools:\n");
     printf("  myls, mycat, mycp, mymv, myrm, mymkdir, myrmdir, mytouch, mystat, myfd\n");
+    printf("\nAI Integration:\n");
+    printf("  @<query>           Ask AI for command suggestions\n");
+    printf("                     Example: @list all python files\n");
+    printf("  Confirmation:      y = execute, n = cancel, e = edit suggestion\n");
+    printf("  Environment Vars:  OPENAI_API_KEY, USHELL_LLM_MODEL, USHELL_AI_HELPER,\n");
+    printf("                     USHELL_AI_DEBUG, USHELL_AI_CONTEXT\n");
+    printf("  See aiIntegr/README.md for detailed AI configuration\n");
     printf("\nFeatures:\n");
     printf("  - Variables: $VAR or ${VAR}\n");
     printf("  - Arithmetic: $((expression))\n");
@@ -677,6 +685,119 @@ int builtin_bg(char **argv, Env *env) {
     
     // Print confirmation message
     printf("[%d]+ %s &\n", job->job_id, job->command);
+    
+    return 0;
+}
+
+/**
+ * builtin_commands - List all available commands
+ * 
+ * Usage: commands [--json]
+ * Without --json: Prints human-readable list of all commands
+ * With --json: Prints JSON catalog for AI consumption
+ * 
+ * Returns:
+ *   0 on success, 1 on error
+ */
+int builtin_commands(char **argv, Env *env) {
+    (void)env;  // Unused parameter
+    
+    // Check for --json flag
+    int json_mode = 0;
+    if (argv[1] != NULL && strcmp(argv[1], "--json") == 0) {
+        json_mode = 1;
+    }
+    
+    if (json_mode) {
+        // Output JSON catalog for AI helper
+        printf("{\n");
+        printf("  \"commands\": [\n");
+        
+        // Built-in commands
+        printf("    {\"name\": \"cd\", \"summary\": \"Change directory\", \"description\": \"Change the current working directory\", \"usage\": \"cd [directory]\", \"options\": []},\n");
+        printf("    {\"name\": \"pwd\", \"summary\": \"Print working directory\", \"description\": \"Display the current working directory\", \"usage\": \"pwd\", \"options\": []},\n");
+        printf("    {\"name\": \"echo\", \"summary\": \"Print text\", \"description\": \"Print arguments to standard output\", \"usage\": \"echo [text...]\", \"options\": []},\n");
+        printf("    {\"name\": \"export\", \"summary\": \"Set environment variable\", \"description\": \"Set or export environment variables\", \"usage\": \"export VAR=value\", \"options\": []},\n");
+        printf("    {\"name\": \"exit\", \"summary\": \"Exit shell\", \"description\": \"Exit the shell with optional status code\", \"usage\": \"exit [status]\", \"options\": []},\n");
+        printf("    {\"name\": \"set\", \"summary\": \"Set shell variable\", \"description\": \"Set shell variables (key=value pairs)\", \"usage\": \"set\", \"options\": []},\n");
+        printf("    {\"name\": \"unset\", \"summary\": \"Unset variable\", \"description\": \"Remove shell or environment variable\", \"usage\": \"unset VAR\", \"options\": []},\n");
+        printf("    {\"name\": \"env\", \"summary\": \"Show environment\", \"description\": \"Display all environment variables\", \"usage\": \"env\", \"options\": []},\n");
+        printf("    {\"name\": \"help\", \"summary\": \"Show help\", \"description\": \"Display help information\", \"usage\": \"help\", \"options\": []},\n");
+        printf("    {\"name\": \"version\", \"summary\": \"Show version\", \"description\": \"Display shell version information\", \"usage\": \"version\", \"options\": []},\n");
+        printf("    {\"name\": \"history\", \"summary\": \"Command history\", \"description\": \"Display command history\", \"usage\": \"history\", \"options\": []},\n");
+        printf("    {\"name\": \"edi\", \"summary\": \"Text editor\", \"description\": \"Simple built-in text editor\", \"usage\": \"edi [file]\", \"options\": []},\n");
+        printf("    {\"name\": \"apt\", \"summary\": \"Package manager\", \"description\": \"APT-like package manager for shell\", \"usage\": \"apt <subcommand>\", \"options\": []},\n");
+        printf("    {\"name\": \"jobs\", \"summary\": \"List jobs\", \"description\": \"Display background and stopped jobs\", \"usage\": \"jobs\", \"options\": []},\n");
+        printf("    {\"name\": \"fg\", \"summary\": \"Foreground job\", \"description\": \"Bring job to foreground\", \"usage\": \"fg [job_id]\", \"options\": []},\n");
+        printf("    {\"name\": \"bg\", \"summary\": \"Background job\", \"description\": \"Resume job in background\", \"usage\": \"bg [job_id]\", \"options\": []},\n");
+        printf("    {\"name\": \"commands\", \"summary\": \"List commands\", \"description\": \"List all available commands\", \"usage\": \"commands [--json]\", \"options\": []},\n");
+        
+        // APT subcommands
+        printf("    {\"name\": \"apt install\", \"summary\": \"Install package\", \"description\": \"Install a package from repository\", \"usage\": \"apt install <package>\", \"options\": []},\n");
+        printf("    {\"name\": \"apt remove\", \"summary\": \"Remove package\", \"description\": \"Remove an installed package\", \"usage\": \"apt remove <package>\", \"options\": []},\n");
+        printf("    {\"name\": \"apt list\", \"summary\": \"List packages\", \"description\": \"List installed packages\", \"usage\": \"apt list\", \"options\": []},\n");
+        printf("    {\"name\": \"apt search\", \"summary\": \"Search packages\", \"description\": \"Search for available packages\", \"usage\": \"apt search <term>\", \"options\": []},\n");
+        printf("    {\"name\": \"apt show\", \"summary\": \"Show package info\", \"description\": \"Show package information\", \"usage\": \"apt show <package>\", \"options\": []},\n");
+        printf("    {\"name\": \"apt update\", \"summary\": \"Update index\", \"description\": \"Update package index\", \"usage\": \"apt update\", \"options\": []},\n");
+        printf("    {\"name\": \"apt depends\", \"summary\": \"Show dependencies\", \"description\": \"Show package dependencies\", \"usage\": \"apt depends <package>\", \"options\": []},\n");
+        printf("    {\"name\": \"apt clean\", \"summary\": \"Clean cache\", \"description\": \"Clean package cache\", \"usage\": \"apt clean\", \"options\": []},\n");
+        
+        // Tool commands
+        printf("    {\"name\": \"myls\", \"summary\": \"List files\", \"description\": \"List directory contents\", \"usage\": \"myls [directory]\", \"options\": []},\n");
+        printf("    {\"name\": \"mycat\", \"summary\": \"Show file\", \"description\": \"Display file contents\", \"usage\": \"mycat <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"mycp\", \"summary\": \"Copy files\", \"description\": \"Copy files or directories\", \"usage\": \"mycp <source> <dest>\", \"options\": []},\n");
+        printf("    {\"name\": \"mymv\", \"summary\": \"Move files\", \"description\": \"Move or rename files\", \"usage\": \"mymv <source> <dest>\", \"options\": []},\n");
+        printf("    {\"name\": \"myrm\", \"summary\": \"Remove files\", \"description\": \"Remove files or directories\", \"usage\": \"myrm <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"mymkdir\", \"summary\": \"Make directory\", \"description\": \"Create directories\", \"usage\": \"mymkdir <directory>\", \"options\": []},\n");
+        printf("    {\"name\": \"myrmdir\", \"summary\": \"Remove directory\", \"description\": \"Remove empty directories\", \"usage\": \"myrmdir <directory>\", \"options\": []},\n");
+        printf("    {\"name\": \"mytouch\", \"summary\": \"Create file\", \"description\": \"Create empty file or update timestamp\", \"usage\": \"mytouch <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"mystat\", \"summary\": \"File status\", \"description\": \"Display file status information\", \"usage\": \"mystat <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"myfd\", \"summary\": \"Find files\", \"description\": \"Search for files by name\", \"usage\": \"myfd <pattern>\", \"options\": []}\n");
+        
+        printf("  ]\n");
+        printf("}\n");
+    } else {
+        // Human-readable output
+        printf("Available commands:\n\n");
+        printf("Built-in Commands:\n");
+        printf("  cd          - Change directory\n");
+        printf("  pwd         - Print working directory\n");
+        printf("  echo        - Print text\n");
+        printf("  export      - Set environment variable\n");
+        printf("  exit        - Exit shell\n");
+        printf("  set         - Set shell variable\n");
+        printf("  unset       - Unset variable\n");
+        printf("  env         - Show environment\n");
+        printf("  help        - Show help\n");
+        printf("  version     - Show version\n");
+        printf("  history     - Command history\n");
+        printf("  edi         - Text editor\n");
+        printf("  apt         - Package manager\n");
+        printf("  jobs        - List jobs\n");
+        printf("  fg          - Foreground job\n");
+        printf("  bg          - Background job\n");
+        printf("  commands    - List commands\n");
+        printf("\nAPT Subcommands:\n");
+        printf("  apt install - Install package\n");
+        printf("  apt remove  - Remove package\n");
+        printf("  apt list    - List packages\n");
+        printf("  apt search  - Search packages\n");
+        printf("  apt show    - Show package info\n");
+        printf("  apt update  - Update index\n");
+        printf("  apt depends - Show dependencies\n");
+        printf("  apt clean   - Clean cache\n");
+        printf("\nTool Commands:\n");
+        printf("  myls        - List files\n");
+        printf("  mycat       - Show file\n");
+        printf("  mycp        - Copy files\n");
+        printf("  mymv        - Move files\n");
+        printf("  myrm        - Remove files\n");
+        printf("  mymkdir     - Make directory\n");
+        printf("  myrmdir     - Remove directory\n");
+        printf("  mytouch     - Create file\n");
+        printf("  mystat      - File status\n");
+        printf("  myfd        - Find files\n");
+    }
     
     return 0;
 }
