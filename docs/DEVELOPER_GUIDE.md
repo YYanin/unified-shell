@@ -8,12 +8,13 @@
 5. [Parser & Grammar](#parser--grammar)
 6. [Evaluation Pipeline](#evaluation-pipeline)
 7. [Job Control System](#job-control-system)
-8. [Memory Management](#memory-management)
-9. [Adding Features](#adding-features)
-10. [Testing Guidelines](#testing-guidelines)
-11. [Code Style Guide](#code-style-guide)
-12. [Debugging](#debugging)
-13. [Performance Considerations](#performance-considerations)
+8. [AI Integration System](#ai-integration-system)
+9. [Memory Management](#memory-management)
+10. [Adding Features](#adding-features)
+11. [Testing Guidelines](#testing-guidelines)
+12. [Code Style Guide](#code-style-guide)
+13. [Debugging](#debugging)
+14. [Performance Considerations](#performance-considerations)
 
 ---
 
@@ -1478,6 +1479,639 @@ echo -e "sleep 1 &\nsleep 2\njobs\nexit" | \
 1. Add nice/priority field to Job struct
 2. Implement setpriority() calls
 3. Add builtin to change priority
+
+---
+
+## AI Integration System
+
+### Overview
+
+The AI integration system provides natural language command suggestions using the `@` prefix. It follows a safe, user-controlled architecture where the AI helper suggests commands but the user must explicitly confirm before execution.
+
+**Key Design Principles:**
+- Shell maintains full control (AI never executes directly)
+- User confirmation required for all suggestions
+- Graceful fallback when AI unavailable
+- Privacy-conscious with optional context sharing
+- Dual mode: heuristic (free) and OpenAI-powered (intelligent)
+
+### Architecture
+
+```
+User Input (@query)
+    ↓
+┌─────────────────────────────────────────┐
+│  Shell REPL (src/main.c)                │
+│  - Detect @ prefix                      │
+│  - Extract query                        │
+│  - Call handle_ai_query()               │
+└─────────────┬───────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│  handle_ai_query()                      │
+│  - Validate query not empty             │
+│  - Call call_ai_helper()                │
+│  - Display suggestion                   │
+│  - Get user confirmation                │
+│  - Execute if confirmed                 │
+└─────────────┬───────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│  call_ai_helper()                       │
+│  - Get AI helper script path            │
+│  - Generate shell state context (JSON)  │
+│  - Write context to temp file           │
+│  - Execute Python script via popen()    │
+│  - Capture stdout (suggestion)          │
+│  - Clean up temp file                   │
+└─────────────┬───────────────────────────┘
+              ↓
+┌─────────────────────────────────────────┐
+│  Python AI Helper (aiIntegr/ushell_ai.py) │
+│  - Load command catalog                 │
+│  - Load optional context                │
+│  - Try OpenAI API (if key available)    │
+│  - Fall back to heuristic matching      │
+│  - Return single command line           │
+└─────────────┬───────────────────────────┘
+              ↓
+         Command Suggestion
+              ↓
+┌─────────────────────────────────────────┐
+│  User Confirmation                      │
+│  - y: Execute command                   │
+│  - n: Cancel                            │
+│  - e: Edit before executing             │
+└─────────────┬───────────────────────────┘
+              ↓
+    Normal Shell Execution
+```
+
+### Key Components
+
+#### 1. Query Detection (src/main.c)
+
+Located in the main REPL loop:
+
+```c
+// In main() REPL loop
+if (line[0] == '@') {
+    // Extract query (everything after @)
+    const char *query = line + 1;
+    
+    // Skip whitespace
+    while (*query == ' ' || *query == '\t') {
+        query++;
+    }
+    
+    // Handle AI query
+    handle_ai_query(query);
+    continue;
+}
+```
+
+**Key Points:**
+- Checks first character for `@`
+- Trims leading whitespace from query
+- Bypasses normal parsing pipeline
+- Continues REPL loop after processing
+
+#### 2. AI Query Handler (src/main.c)
+
+```c
+int handle_ai_query(const char *query) {
+    // Validate query not empty
+    if (query == NULL || strlen(query) == 0) {
+        // Show inline help
+        return -1;
+    }
+    
+    // Get suggestion from AI helper
+    char *suggestion = call_ai_helper(query);
+    if (suggestion == NULL) {
+        return -1;  // Error already printed
+    }
+    
+    // Display and get confirmation
+    printf("AI Suggestion: %s\n", suggestion);
+    printf("Execute this command? (y/n/e): ");
+    
+    char choice = read_confirmation();
+    
+    // Handle user choice
+    switch (choice) {
+        case 'y':
+            // Execute through normal pipeline
+            execute_suggestion(suggestion);
+            break;
+        case 'e':
+            // Edit mode - pre-fill readline
+            edit_and_execute(suggestion);
+            break;
+        case 'n':
+        default:
+            printf("Command cancelled.\n");
+            break;
+    }
+    
+    free(suggestion);
+    return 0;
+}
+```
+
+#### 3. AI Helper Caller (src/main.c)
+
+```c
+char* call_ai_helper(const char *query) {
+    // Get script path from environment
+    const char *helper_path = getenv("USHELL_AI_HELPER");
+    if (helper_path == NULL) {
+        helper_path = "./aiIntegr/ushell_ai.py";
+    }
+    
+    // Check script exists and is executable
+    if (access(helper_path, X_OK) != 0) {
+        fprintf(stderr, "AI helper not found: %s\n", helper_path);
+        return NULL;
+    }
+    
+    // Generate context if enabled
+    char *context_json = NULL;
+    char context_file[PATH_MAX] = {0};
+    
+    if (getenv("USHELL_AI_CONTEXT") != "0") {
+        context_json = get_shell_state_json();
+        // Write to temp file
+        // ... (see implementation)
+    }
+    
+    // Build command with escaped query
+    char command[MAX_LINE * 2];
+    // Escape special chars: ", \, $, `
+    // ... (see implementation)
+    
+    // Execute and capture output
+    FILE *fp = popen(command, "r");
+    char suggestion[MAX_LINE];
+    fgets(suggestion, sizeof(suggestion), fp);
+    pclose(fp);
+    
+    // Clean up temp file
+    if (context_file[0] != '\0') {
+        unlink(context_file);
+    }
+    
+    return strdup(suggestion);
+}
+```
+
+**Security Features:**
+- Query escaping prevents shell injection
+- Temp files use mkstemp() for security
+- Files cleaned up even on error
+- Validates helper script before execution
+
+#### 4. Shell State Context (src/main.c)
+
+```c
+char* get_shell_state_json(void) {
+    FILE *fp = open_memstream(&buffer, &size);
+    
+    fprintf(fp, "{\n");
+    
+    // Current directory
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd))) {
+        fprintf(fp, "  \"cwd\": \"%s\",\n", cwd);
+    }
+    
+    // Username
+    const char *user = getenv("USER");
+    if (user) {
+        fprintf(fp, "  \"user\": \"%s\",\n", user);
+    }
+    
+    // Environment variables (filtered)
+    fprintf(fp, "  \"shell_vars\": {\n");
+    extern char **environ;
+    for (char **env = environ; *env; env++) {
+        // Skip sensitive variables
+        if (is_sensitive(*env)) continue;
+        // Add to JSON
+    }
+    fprintf(fp, "  },\n");
+    
+    // Recent command history (last 5)
+    fprintf(fp, "  \"recent_commands\": [\n");
+    // ... add recent history
+    fprintf(fp, "  ]\n");
+    
+    fprintf(fp, "}\n");
+    fclose(fp);
+    
+    return buffer;
+}
+```
+
+**Privacy Features:**
+- Filters sensitive environment variables
+- Only includes last 5 commands (not full history)
+- No command outputs included
+- Can be disabled via USHELL_AI_CONTEXT=0
+
+#### 5. Python AI Helper (aiIntegr/ushell_ai.py)
+
+**Main Logic:**
+```python
+def suggest_command(query, catalog, context=None):
+    # 1. Try OpenAI API if available
+    if os.getenv("OPENAI_API_KEY"):
+        suggestion = call_llm(query, catalog, context)
+        if suggestion:
+            return suggestion
+    
+    # 2. Fall back to heuristic matching
+    return heuristic_suggestion(query, catalog)
+
+def call_llm(query, catalog, context):
+    try:
+        import openai
+        client = openai.OpenAI()
+        
+        # Build prompt with catalog and context
+        prompt = build_prompt(query, catalog, context)
+        
+        # Call API with constraints
+        response = client.chat.completions.create(
+            model=os.getenv("USHELL_LLM_MODEL", "gpt-4o-mini"),
+            messages=[
+                {"role": "system", "content": "You are a Unix shell expert..."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=128,  # Commands are short
+            temperature=0.3  # Consistent suggestions
+        )
+        
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        # Log error if debug enabled
+        if os.getenv("USHELL_AI_DEBUG") == "1":
+            print(f"[ushell_ai] OpenAI error: {e}", file=sys.stderr)
+        return None
+
+def heuristic_suggestion(query, catalog):
+    q = query.lower()
+    
+    # Pattern matching
+    if "list" in q or "show" in q:
+        return "myls" if "myls" in catalog else "ls"
+    elif "find" in q or "search" in q:
+        return "find"
+    # ... more patterns
+    
+    return "echo 'No suggestion available'"
+```
+
+**Key Features:**
+- Tries OpenAI first, falls back to heuristic
+- Uses command catalog for context-aware suggestions
+- Graceful error handling
+- Debug logging support
+- Single-line output for easy parsing
+
+### Data Flow
+
+#### Command Catalog Flow
+
+```
+Shell Startup
+    ↓
+Export Commands (--commands-json flag)
+    ↓
+┌─────────────────────────────────────┐
+│  builtin_commands() generates JSON  │
+│  - Iterates all builtins            │
+│  - Includes tools                   │
+│  - Adds descriptions, usage         │
+└─────────────┬───────────────────────┘
+              ↓
+        JSON Output
+              ↓
+┌─────────────────────────────────────┐
+│  Python AI Helper reads catalog     │
+│  - Parses JSON                      │
+│  - Extracts command names           │
+│  - Uses in prompt to LLM            │
+└─────────────────────────────────────┘
+```
+
+The catalog is generated dynamically from the shell's built-in command table, ensuring it's always up-to-date.
+
+#### Context Flow
+
+```
+AI Query Triggered
+    ↓
+get_shell_state_json()
+    ↓
+┌─────────────────────────────────────┐
+│  Collect Shell State:               │
+│  - getcwd() → current directory     │
+│  - getenv("USER") → username        │
+│  - environ → filtered vars          │
+│  - history → last 5 commands        │
+└─────────────┬───────────────────────┘
+              ↓
+        JSON String
+              ↓
+mkstemp() → /tmp/ushell_context_XXXXXX
+              ↓
+┌─────────────────────────────────────┐
+│  Python reads context file          │
+│  - Parses JSON                      │
+│  - Adds to LLM prompt               │
+└─────────────┬───────────────────────┘
+              ↓
+      LLM generates suggestion
+              ↓
+┌─────────────────────────────────────┐
+│  Shell unlinks temp file            │
+└─────────────────────────────────────┘
+```
+
+**Security Notes:**
+- Temp files use secure mkstemp()
+- Files deleted immediately after use
+- Sensitive vars filtered (PASSWORD, TOKEN, KEY, etc.)
+
+### Configuration
+
+#### Environment Variables
+
+| Variable | Purpose | Default | Location |
+|----------|---------|---------|----------|
+| `USHELL_AI_HELPER` | Path to AI script | `./aiIntegr/ushell_ai.py` | Shell |
+| `USHELL_AI_CONTEXT` | Enable context | `1` | Shell |
+| `USHELL_AI_DEBUG` | Debug output | `0` | Shell/Python |
+| `OPENAI_API_KEY` | OpenAI API key | None | Python |
+| `USHELL_LLM_MODEL` | Model to use | `gpt-4o-mini` | Python |
+| `USHELL_CATALOG_CMD` | Catalog command | `ushell --commands-json` | Python |
+| `USHELL_CATALOG_FILE` | Static catalog | `./aiIntegr/commands.json` | Python |
+
+#### Code Locations
+
+- **Shell Integration**: `src/main.c` (~200 lines)
+  - `handle_ai_query()` - Main entry point
+  - `call_ai_helper()` - Execute Python script
+  - `get_shell_state_json()` - Generate context
+  - `read_confirmation()` - User input
+  - REPL loop @ detection
+
+- **Python Helper**: `aiIntegr/ushell_ai.py` (~573 lines)
+  - `suggest_command()` - Main logic
+  - `call_llm()` - OpenAI integration
+  - `heuristic_suggestion()` - Pattern matching
+  - `build_prompt()` - Prompt engineering
+  - `load_catalog()` - Command catalog loading
+
+- **Documentation**:
+  - `aiIntegr/README.md` - Comprehensive user guide
+  - `docs/USER_GUIDE.md` - Usage examples
+  - `README.md` - Quick start
+
+### Testing AI Integration
+
+#### Unit Tests
+
+Test individual components:
+
+```bash
+# Test AI helper directly
+./aiIntegr/ushell_ai.py "list files"
+# Expected: myls (or ls)
+
+# Test with debug
+export USHELL_AI_DEBUG=1
+./aiIntegr/ushell_ai.py "find c files"
+# Expected: Debug output + suggestion
+
+# Test catalog loading
+ushell --commands-json | python3 -m json.tool
+# Expected: Valid JSON with all commands
+```
+
+#### Integration Tests
+
+Test full workflow:
+
+```bash
+# Test heuristic mode
+export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai.py
+echo -e "@list files\nn" | ./ushell
+# Expected: Suggestion shown, cancelled
+
+# Test OpenAI mode (if key available)
+export OPENAI_API_KEY="sk-..."
+echo -e "@find large files\ny" | ./ushell
+# Expected: Intelligent suggestion, executed
+
+# Test context
+export USHELL_AI_CONTEXT=1
+cd /tmp
+echo -e "@create file\nn" | ./ushell
+# Expected: Context-aware suggestion
+```
+
+#### Error Cases
+
+```bash
+# Test missing helper
+export USHELL_AI_HELPER=/nonexistent
+echo "@test" | ./ushell
+# Expected: Error message
+
+# Test empty query
+echo "@" | ./ushell
+# Expected: Inline help
+
+# Test invalid API key
+export OPENAI_API_KEY=invalid
+echo -e "@test\nn" | ./ushell
+# Expected: Falls back to heuristic
+```
+
+### Adding AI Features
+
+#### Adding Heuristic Patterns
+
+Edit `aiIntegr/ushell_ai.py`:
+
+```python
+def heuristic_suggestion(query, catalog):
+    q = query.lower()
+    
+    # Add your pattern
+    if "your_keyword" in q:
+        return "your_command"
+    
+    # Check if command in catalog
+    if "your_command" in [cmd["name"] for cmd in catalog]:
+        return "your_command"
+    
+    # Existing patterns...
+```
+
+#### Customizing System Prompt
+
+Modify prompt in `build_prompt()`:
+
+```python
+def build_prompt(query, catalog, context=None):
+    system_msg = """You are a Unix shell command expert.
+    Your custom instructions here...
+    """
+    
+    # Add catalog
+    catalog_str = format_catalog(catalog)
+    
+    # Add context if available
+    context_str = format_context(context) if context else ""
+    
+    return f"{system_msg}\n\nCatalog:\n{catalog_str}\n\n{context_str}\n\nQuery: {query}"
+```
+
+#### Adding Context Fields
+
+Modify `get_shell_state_json()` in `src/main.c`:
+
+```c
+// Add your field
+fprintf(fp, "  \"my_field\": \"%s\",\n", my_value);
+```
+
+Update Python to use new field:
+
+```python
+def format_context(context):
+    if "my_field" in context:
+        return f"Custom info: {context['my_field']}"
+```
+
+### Performance Considerations
+
+#### Latency
+
+- **Heuristic mode**: ~50ms (local pattern matching)
+- **OpenAI mode**: ~500-2000ms (network + API processing)
+- **Context generation**: ~5ms (shell state collection)
+- **Catalog generation**: ~10ms (JSON serialization)
+
+**Optimization Tips:**
+- Cache catalog if generating frequently
+- Use faster OpenAI model (gpt-4o-mini)
+- Disable context for faster responses
+- Implement timeout (30s default)
+
+#### Token Usage
+
+Per query token breakdown:
+- System prompt: ~100 tokens
+- Command catalog: ~500 tokens
+- Context (if enabled): ~100 tokens
+- Query: ~20 tokens
+- Response: ~20 tokens (max 128)
+
+**Total: ~740 tokens per query**
+
+Cost with gpt-4o-mini:
+- Input: 740 tokens × $0.15/1M = $0.00011
+- Output: 20 tokens × $0.60/1M = $0.00001
+- **Total: ~$0.00012 per query**
+
+### Security Considerations
+
+#### Shell Injection Prevention
+
+Query escaping in `call_ai_helper()`:
+
+```c
+// Escape dangerous characters
+while (*src) {
+    if (*src == '"' || *src == '\\' || 
+        *src == '$' || *src == '`') {
+        *dst++ = '\\';  // Escape character
+    }
+    *dst++ = *src++;
+}
+```
+
+**Protected against:**
+- Command injection via `$()`
+- Variable expansion via `$VAR`
+- Quote breaking via `"`
+- Backtick execution via `` ` ``
+
+#### Temp File Security
+
+```c
+// Use mkstemp for secure temp files
+strcpy(context_file, "/tmp/ushell_context_XXXXXX");
+int fd = mkstemp(context_file);  // Creates with 0600 permissions
+
+// Cleanup on all paths
+if (context_file[0] != '\0') {
+    unlink(context_file);  // Delete immediately after use
+}
+```
+
+#### Privacy Protection
+
+Sensitive variables filtered in `get_shell_state_json()`:
+
+```c
+int is_sensitive(const char *env_str) {
+    return strstr(env_str, "PASSWORD") ||
+           strstr(env_str, "TOKEN") ||
+           strstr(env_str, "KEY") ||
+           strstr(env_str, "SECRET") ||
+           strstr(env_str, "CREDENTIAL");
+}
+```
+
+### Troubleshooting
+
+Common issues and solutions:
+
+**Problem**: AI helper not found
+```bash
+# Solution: Set correct path
+export USHELL_AI_HELPER=/full/path/to/ushell_ai.py
+chmod +x $USHELL_AI_HELPER
+```
+
+**Problem**: OpenAI package not installed
+```bash
+# Solution: Install in venv
+pip install openai
+# Use wrapper script that activates venv
+export USHELL_AI_HELPER=/path/to/ushell_ai_venv.sh
+```
+
+**Problem**: Empty suggestions
+```bash
+# Solution: Enable debug
+export USHELL_AI_DEBUG=1
+# Check catalog loading
+ushell --commands-json
+```
+
+**Problem**: Slow responses
+```bash
+# Solution: Use heuristic mode
+unset OPENAI_API_KEY
+# Or use faster model
+export USHELL_LLM_MODEL=gpt-4o-mini
+```
 
 ---
 
