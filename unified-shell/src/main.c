@@ -40,12 +40,20 @@
 #include "apt.h"
 #include "jobs.h"
 #include "signals.h"
+#include "threading.h"
 
 /**
  * Global environment - stores shell variables and their values
  * Accessible to all functions for variable expansion and management
  */
 Env *shell_env = NULL;
+
+/**
+ * Global thread pool - manages worker threads for built-in commands
+ * Initialized if USHELL_THREAD_BUILTINS=1 is set
+ * NULL if threading is disabled
+ */
+ThreadPool *g_thread_pool = NULL;
 
 /**
  * cleanup_shell - Cleanup function called on exit
@@ -55,6 +63,12 @@ void cleanup_shell(void) {
     // Save history before exiting
     history_save(HISTORY_FILE);
     history_free();
+    
+    // Destroy thread pool if it was created
+    if (g_thread_pool != NULL) {
+        thread_pool_destroy(g_thread_pool);
+        g_thread_pool = NULL;
+    }
     
     if (shell_env) {
         env_free(shell_env);
@@ -685,6 +699,29 @@ int main(int argc, char **argv) {
     
     // Create environment to store shell variables (key-value pairs)
     shell_env = env_new();
+    
+    // Initialize thread pool if threading is enabled
+    // Check environment variable USHELL_THREAD_BUILTINS and USHELL_THREAD_POOL_SIZE
+    char *thread_builtins = getenv("USHELL_THREAD_BUILTINS");
+    if (thread_builtins != NULL && strcmp(thread_builtins, "1") == 0) {
+        // Get thread pool size from environment, default to 4
+        int pool_size = 4;
+        char *pool_size_str = getenv("USHELL_THREAD_POOL_SIZE");
+        if (pool_size_str != NULL) {
+            int parsed_size = atoi(pool_size_str);
+            if (parsed_size > 0 && parsed_size <= 32) {
+                pool_size = parsed_size;
+            }
+        }
+        
+        // Create thread pool with specified size and queue capacity (2x pool size)
+        g_thread_pool = thread_pool_create(pool_size, pool_size * 2);
+        if (g_thread_pool != NULL) {
+            fprintf(stderr, "[Threading enabled: %d worker threads]\n", pool_size);
+        } else {
+            fprintf(stderr, "[Warning: Failed to create thread pool, threading disabled]\n");
+        }
+    }
     
     // Initialize apt package system (creates directories if needed)
     // This is non-blocking and safe to call even if not used

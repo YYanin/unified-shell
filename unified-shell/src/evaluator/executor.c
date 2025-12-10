@@ -4,6 +4,7 @@
 #include "glob.h"
 #include "jobs.h"
 #include "signals.h"
+#include "threading.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,7 +19,13 @@
 #define MAX_EXPANDED_ARGS 1024
 
 /**
- * Execute a command with fork/exec
+ * Execute a command with fork/exec (or threading for built-ins)
+ * 
+ * Built-in commands can be executed in threads if USHELL_THREAD_BUILTINS=1
+ * is set in the environment. This allows for better concurrency and testing
+ * of thread-safe implementations.
+ * 
+ * External commands continue to use fork/exec as before.
  */
 int execute_command(char **argv, Env *env) {
     if (argv == NULL || argv[0] == NULL) {
@@ -28,8 +35,16 @@ int execute_command(char **argv, Env *env) {
     // Check if it's a built-in command
     builtin_func builtin = find_builtin(argv[0]);
     if (builtin != NULL) {
-        // Execute built-in in parent process
-        return builtin(argv, env);
+        // Check if threading is enabled for built-ins
+        char *thread_builtins = getenv("USHELL_THREAD_BUILTINS");
+        
+        if (thread_builtins != NULL && strcmp(thread_builtins, "1") == 0) {
+            // Execute built-in in a separate thread
+            return execute_builtin_threaded(builtin, argv, env);
+        } else {
+            // Execute built-in in parent process (traditional behavior)
+            return builtin(argv, env);
+        }
     }
 
     // Check if it's an integrated tool

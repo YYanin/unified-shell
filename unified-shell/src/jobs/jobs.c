@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <pthread.h>
 
 /* ============================================================================
  * Global Job List
@@ -29,6 +30,9 @@ static JobList g_job_list;
 
 /* Next job ID to assign (increments for each new job) */
 static int g_next_job_id = 1;
+
+/* Mutex to protect job list operations (thread-safe access) */
+static pthread_mutex_t jobs_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ============================================================================
  * Helper Functions
@@ -116,20 +120,25 @@ void jobs_init(void) {
  * Returns: Assigned job ID on success, -1 if job list is full
  */
 int jobs_add(pid_t pid, const char *cmd, int bg) {
+    pthread_mutex_lock(&jobs_mutex);
+    
     /* Check if job list is full */
     if (g_job_list.count >= MAX_JOBS) {
         fprintf(stderr, "jobs: job list full (max %d jobs)\n", MAX_JOBS);
+        pthread_mutex_unlock(&jobs_mutex);
         return -1;
     }
     
     /* Validate inputs */
     if (pid <= 0) {
         fprintf(stderr, "jobs: invalid PID %d\n", pid);
+        pthread_mutex_unlock(&jobs_mutex);
         return -1;
     }
     
     if (cmd == NULL) {
         fprintf(stderr, "jobs: command cannot be NULL\n");
+        pthread_mutex_unlock(&jobs_mutex);
         return -1;
     }
     
@@ -155,7 +164,9 @@ int jobs_add(pid_t pid, const char *cmd, int bg) {
     /* Increment job count */
     g_job_list.count++;
     
-    return job->job_id;
+    int job_id = job->job_id;
+    pthread_mutex_unlock(&jobs_mutex);
+    return job_id;
 }
 
 /**
@@ -166,13 +177,17 @@ int jobs_add(pid_t pid, const char *cmd, int bg) {
  * Returns: Pointer to Job structure if found, NULL otherwise
  */
 Job* jobs_get(int job_id) {
+    pthread_mutex_lock(&jobs_mutex);
     int index = find_job_index(job_id);
     
     if (index < 0) {
+        pthread_mutex_unlock(&jobs_mutex);
         return NULL;  /* Job not found */
     }
     
-    return &g_job_list.jobs[index];
+    Job *result = &g_job_list.jobs[index];
+    pthread_mutex_unlock(&jobs_mutex);
+    return result;
 }
 
 /**
@@ -183,13 +198,17 @@ Job* jobs_get(int job_id) {
  * Returns: Pointer to Job structure if found, NULL otherwise
  */
 Job* jobs_get_by_pid(pid_t pid) {
+    pthread_mutex_lock(&jobs_mutex);
     int index = find_job_index_by_pid(pid);
     
     if (index < 0) {
+        pthread_mutex_unlock(&jobs_mutex);
         return NULL;  /* Job not found */
     }
     
-    return &g_job_list.jobs[index];
+    Job *result = &g_job_list.jobs[index];
+    pthread_mutex_unlock(&jobs_mutex);
+    return result;
 }
 
 /**
@@ -200,11 +219,15 @@ Job* jobs_get_by_pid(pid_t pid) {
  * Returns: Pointer to Job if index valid, NULL otherwise
  */
 Job* jobs_get_by_index(int index) {
+    pthread_mutex_lock(&jobs_mutex);
     if (index < 0 || index >= g_job_list.count) {
+        pthread_mutex_unlock(&jobs_mutex);
         return NULL;
     }
     
-    return &g_job_list.jobs[index];
+    Job *result = &g_job_list.jobs[index];
+    pthread_mutex_unlock(&jobs_mutex);
+    return result;
 }
 
 /**
@@ -218,9 +241,12 @@ Job* jobs_get_by_index(int index) {
  * Returns: 0 on success, -1 if job not found
  */
 int jobs_remove(int job_id) {
+    pthread_mutex_lock(&jobs_mutex);
+    
     int index = find_job_index(job_id);
     
     if (index < 0) {
+        pthread_mutex_unlock(&jobs_mutex);
         return -1;  /* Job not found */
     }
     
@@ -235,6 +261,7 @@ int jobs_remove(int job_id) {
     /* Zero out the last slot */
     memset(&g_job_list.jobs[g_job_list.count], 0, sizeof(Job));
     
+    pthread_mutex_unlock(&jobs_mutex);
     return 0;
 }
 
@@ -248,6 +275,8 @@ int jobs_remove(int job_id) {
 void jobs_update_status(void) {
     int status;
     pid_t result;
+    
+    pthread_mutex_lock(&jobs_mutex);
     
     /* Iterate through all jobs */
     for (int i = 0; i < g_job_list.count; i++) {
@@ -286,6 +315,8 @@ void jobs_update_status(void) {
             }
         }
     }
+    
+    pthread_mutex_unlock(&jobs_mutex);
 }
 
 /**
@@ -297,8 +328,11 @@ void jobs_update_status(void) {
  * The '+' marker indicates the current job (most recent).
  */
 void jobs_print_all(void) {
+    pthread_mutex_lock(&jobs_mutex);
+    
     /* Check if job list is empty */
     if (g_job_list.count == 0) {
+        pthread_mutex_unlock(&jobs_mutex);
         printf("No jobs.\n");
         return;
     }
@@ -328,6 +362,8 @@ void jobs_print_all(void) {
                job->background ? "yes" : "no",
                job->command);
     }
+    
+    pthread_mutex_unlock(&jobs_mutex);
 }
 
 /**
@@ -336,7 +372,10 @@ void jobs_print_all(void) {
  * Returns: Current number of jobs in the list
  */
 int jobs_count(void) {
-    return g_job_list.count;
+    pthread_mutex_lock(&jobs_mutex);
+    int count = g_job_list.count;
+    pthread_mutex_unlock(&jobs_mutex);
+    return count;
 }
 
 /**
@@ -348,15 +387,21 @@ int jobs_count(void) {
  * Returns: Number of jobs removed
  */
 int jobs_cleanup(void) {
+    pthread_mutex_lock(&jobs_mutex);
     int removed = 0;
     
     /* Iterate backwards to avoid index shifting issues */
     for (int i = g_job_list.count - 1; i >= 0; i--) {
         if (g_job_list.jobs[i].status == JOB_DONE) {
-            jobs_remove(g_job_list.jobs[i].job_id);
+            /* Temporarily unlock to avoid deadlock in jobs_remove */
+            int job_id = g_job_list.jobs[i].job_id;
+            pthread_mutex_unlock(&jobs_mutex);
+            jobs_remove(job_id);
+            pthread_mutex_lock(&jobs_mutex);
             removed++;
         }
     }
     
+    pthread_mutex_unlock(&jobs_mutex);
     return removed;
 }

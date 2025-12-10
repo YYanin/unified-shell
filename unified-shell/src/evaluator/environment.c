@@ -6,6 +6,8 @@
 /**
  * env_new - Allocate and initialize an empty environment
  * Returns: Pointer to newly allocated Env struct
+ * 
+ * Thread safety: Initializes mutex for thread-safe environment access
  */
 Env* env_new(void) {
     Env *env;
@@ -19,6 +21,13 @@ Env* env_new(void) {
     
     env->count = 0;
     
+    // Initialize mutex for thread-safe access
+    if (pthread_mutex_init(&env->env_mutex, NULL) != 0) {
+        fprintf(stderr, "env_new: mutex initialization failed\n");
+        free(env);
+        exit(1);
+    }
+    
     // Initialize all bindings to NULL for safety
     for (i = 0; i < MAX_VARS; i++) {
         env->bindings[i].name = NULL;
@@ -31,6 +40,8 @@ Env* env_new(void) {
 /**
  * env_free - Free environment and all allocated strings
  * @env: Environment to free
+ * 
+ * Thread safety: Destroys mutex before freeing
  */
 void env_free(Env *env) {
     int i;
@@ -49,6 +60,9 @@ void env_free(Env *env) {
         }
     }
     
+    // Destroy mutex before freeing environment
+    pthread_mutex_destroy(&env->env_mutex);
+    
     free(env);
 }
 
@@ -59,20 +73,30 @@ void env_free(Env *env) {
  * Returns: Variable value (string) or NULL if not found
  * 
  * First checks internal environment, then falls back to system getenv()
+ * Thread safety: Uses mutex to protect environment access
  */
 char* env_get(Env *env, const char *name) {
     int i;
+    char *result = NULL;
     
     if (!env || !name) {
         return NULL;
     }
     
+    // Lock mutex for thread-safe access
+    pthread_mutex_lock(&env->env_mutex);
+    
     // Search internal environment first
     for (i = 0; i < env->count; i++) {
         if (env->bindings[i].name && strcmp(env->bindings[i].name, name) == 0) {
-            return env->bindings[i].value;
+            result = env->bindings[i].value;
+            pthread_mutex_unlock(&env->env_mutex);
+            return result;
         }
     }
+    
+    // Unlock before calling getenv (which may use its own locks)
+    pthread_mutex_unlock(&env->env_mutex);
     
     // Fall back to system environment
     return getenv(name);
@@ -85,6 +109,7 @@ char* env_get(Env *env, const char *name) {
  * @value: Variable value
  * 
  * Updates existing variable or creates new one
+ * Thread safety: Uses mutex to protect environment modifications
  */
 void env_set(Env *env, const char *name, const char *value) {
     int i;
@@ -92,6 +117,9 @@ void env_set(Env *env, const char *name, const char *value) {
     if (!env || !name || !value) {
         return;
     }
+    
+    // Lock mutex for thread-safe access
+    pthread_mutex_lock(&env->env_mutex);
     
     // Check if variable already exists - update it
     for (i = 0; i < env->count; i++) {
@@ -101,8 +129,10 @@ void env_set(Env *env, const char *name, const char *value) {
             env->bindings[i].value = strdup(value);
             if (!env->bindings[i].value) {
                 fprintf(stderr, "env_set: strdup failed\n");
+                pthread_mutex_unlock(&env->env_mutex);
                 exit(1);
             }
+            pthread_mutex_unlock(&env->env_mutex);
             return;
         }
     }
@@ -110,6 +140,7 @@ void env_set(Env *env, const char *name, const char *value) {
     // Variable doesn't exist - create new binding
     if (env->count >= MAX_VARS) {
         fprintf(stderr, "env_set: maximum number of variables (%d) reached\n", MAX_VARS);
+        pthread_mutex_unlock(&env->env_mutex);
         return;
     }
     
@@ -118,16 +149,21 @@ void env_set(Env *env, const char *name, const char *value) {
     
     if (!env->bindings[env->count].name || !env->bindings[env->count].value) {
         fprintf(stderr, "env_set: strdup failed\n");
+        pthread_mutex_unlock(&env->env_mutex);
         exit(1);
     }
     
     env->count++;
+    
+    pthread_mutex_unlock(&env->env_mutex);
 }
 
 /**
  * env_unset - Remove a variable from the environment
  * @env: Environment to modify
  * @name: Variable name to remove
+ * 
+ * Thread safety: Uses mutex to protect environment modifications
  */
 void env_unset(Env *env, const char *name) {
     int i, j;
@@ -135,6 +171,9 @@ void env_unset(Env *env, const char *name) {
     if (!env || !name) {
         return;
     }
+    
+    // Lock mutex for thread-safe access
+    pthread_mutex_lock(&env->env_mutex);
     
     // Find the variable
     for (i = 0; i < env->count; i++) {
@@ -153,14 +192,19 @@ void env_unset(Env *env, const char *name) {
             env->bindings[env->count - 1].value = NULL;
             
             env->count--;
+            pthread_mutex_unlock(&env->env_mutex);
             return;
         }
     }
+    
+    pthread_mutex_unlock(&env->env_mutex);
 }
 
 /**
  * env_print - Print all variables in the environment (for debugging)
  * @env: Environment to print
+ * 
+ * Thread safety: Uses mutex to protect environment access during printing
  */
 void env_print(Env *env) {
     int i;
@@ -169,6 +213,9 @@ void env_print(Env *env) {
         return;
     }
     
+    // Lock mutex for thread-safe access
+    pthread_mutex_lock(&env->env_mutex);
+    
     printf("=== Environment (%d variables) ===\n", env->count);
     for (i = 0; i < env->count; i++) {
         if (env->bindings[i].name && env->bindings[i].value) {
@@ -176,4 +223,6 @@ void env_print(Env *env) {
         }
     }
     printf("=================================\n");
+    
+    pthread_mutex_unlock(&env->env_mutex);
 }

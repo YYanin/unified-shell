@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <ctype.h>
+#include <pthread.h>
 
 // Original terminal settings (saved for restoration)
 static struct termios orig_termios;
@@ -55,6 +56,9 @@ static const char* (*history_next_callback)(void) = NULL;
 static int history_position = -1;        // -1 means not navigating, >=0 is index
 static char saved_line[1024] = {0};      // Saves current input when entering history
 
+// Mutex to protect terminal state (thread-safe access)
+static pthread_mutex_t terminal_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 /**
  * terminal_set_completion_callback - Register tab completion handler
  * @callback: Function that generates completions for given text
@@ -63,7 +67,9 @@ static char saved_line[1024] = {0};      // Saves current input when entering hi
  * of possible completions. Used for command and filename completion.
  */
 void terminal_set_completion_callback(char** (*callback)(const char *text, int *count)) {
+    pthread_mutex_lock(&terminal_mutex);
     completion_callback = callback;
+    pthread_mutex_unlock(&terminal_mutex);
 }
 
 /**
@@ -78,8 +84,10 @@ void terminal_set_history_callbacks(
     const char* (*get_prev)(void),
     const char* (*get_next)(void)
 ) {
+    pthread_mutex_lock(&terminal_mutex);
     history_prev_callback = get_prev;
     history_next_callback = get_next;
+    pthread_mutex_unlock(&terminal_mutex);
 }
 
 /**
@@ -100,14 +108,18 @@ void terminal_set_history_callbacks(
  * Returns: 0 on success, -1 on error
  */
 int terminal_raw_mode(void) {
+    pthread_mutex_lock(&terminal_mutex);
+    
     // Already in raw mode? Nothing to do
     if (term_mode == TERM_MODE_RAW) {
+        pthread_mutex_unlock(&terminal_mutex);
         return 0;
     }
     
     // Save original terminal settings for later restoration
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
         perror("tcgetattr");
+        pthread_mutex_unlock(&terminal_mutex);
         return -1;
     }
     
@@ -131,10 +143,12 @@ int terminal_raw_mode(void) {
     // TCSAFLUSH: change occurs after all output written, discard unread input
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
         perror("tcsetattr");
+        pthread_mutex_unlock(&terminal_mutex);
         return -1;
     }
     
     term_mode = TERM_MODE_RAW;
+    pthread_mutex_unlock(&terminal_mutex);
     return 0;
 }
 
@@ -150,18 +164,23 @@ int terminal_raw_mode(void) {
  * Returns: 0 on success, -1 on error
  */
 int terminal_normal_mode(void) {
+    pthread_mutex_lock(&terminal_mutex);
+    
     // Already in normal mode? Nothing to do
     if (term_mode == TERM_MODE_NORMAL) {
+        pthread_mutex_unlock(&terminal_mutex);
         return 0;
     }
     
     // Restore original terminal settings
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
         perror("tcsetattr");
+        pthread_mutex_unlock(&terminal_mutex);
         return -1;
     }
     
     term_mode = TERM_MODE_NORMAL;
+    pthread_mutex_unlock(&terminal_mutex);
     return 0;
 }
 

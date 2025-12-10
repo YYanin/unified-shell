@@ -3,10 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 static char **history_entries = NULL;
 static int history_current_count = 0;
 static int history_max_size = HISTORY_SIZE;
+
+/* Thread safety: Mutex to protect history access */
+static pthread_mutex_t history_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void history_init(void) {
     if (history_entries == NULL) {
@@ -88,10 +92,13 @@ void history_add(const char *line) {
         return;
     }
     
+    pthread_mutex_lock(&history_mutex);
+    
     // Don't add duplicate of most recent entry
     if (history_current_count > 0) {
         if (history_entries[history_current_count - 1] != NULL &&
             strcmp(history_entries[history_current_count - 1], line) == 0) {
+            pthread_mutex_unlock(&history_mutex);
             return;
         }
     }
@@ -109,6 +116,8 @@ void history_add(const char *line) {
     if (history_entries[history_current_count] != NULL) {
         history_current_count++;
     }
+    
+    pthread_mutex_unlock(&history_mutex);
 }
 
 const char* history_get(int index) {
@@ -116,12 +125,19 @@ const char* history_get(int index) {
         return NULL;
     }
     
+    pthread_mutex_lock(&history_mutex);
     // Index 0 is most recent, so reverse the lookup
-    return history_entries[history_current_count - 1 - index];
+    const char *result = history_entries[history_current_count - 1 - index];
+    pthread_mutex_unlock(&history_mutex);
+    
+    return result;
 }
 
 int history_count(void) {
-    return history_current_count;
+    pthread_mutex_lock(&history_mutex);
+    int count = history_current_count;
+    pthread_mutex_unlock(&history_mutex);
+    return count;
 }
 
 void history_clear(void) {
@@ -129,11 +145,13 @@ void history_clear(void) {
         return;
     }
     
+    pthread_mutex_lock(&history_mutex);
     for (int i = 0; i < history_current_count; i++) {
         free(history_entries[i]);
         history_entries[i] = NULL;
     }
     history_current_count = 0;
+    pthread_mutex_unlock(&history_mutex);
 }
 
 void history_free(void) {
@@ -141,9 +159,20 @@ void history_free(void) {
         return;
     }
     
-    history_clear();
+    pthread_mutex_lock(&history_mutex);
+    // Clear all entries (note: history_clear also locks, so call internal version)
+    for (int i = 0; i < history_current_count; i++) {
+        free(history_entries[i]);
+        history_entries[i] = NULL;
+    }
+    history_current_count = 0;
+    
     free(history_entries);
     history_entries = NULL;
+    pthread_mutex_unlock(&history_mutex);
+    
+    // Destroy mutex (note: this should be last thing done with history)
+    pthread_mutex_destroy(&history_mutex);
 }
 
 // Navigation state for terminal integration
@@ -154,15 +183,21 @@ const char* history_get_prev(void) {
         return NULL;
     }
     
+    pthread_mutex_lock(&history_mutex);
+    
     if (nav_position == -1) {
         nav_position = history_current_count - 1;
     } else if (nav_position > 0) {
         nav_position--;
     } else {
+        pthread_mutex_unlock(&history_mutex);
         return NULL;
     }
     
-    return history_entries[nav_position];
+    const char *result = history_entries[nav_position];
+    pthread_mutex_unlock(&history_mutex);
+    
+    return result;
 }
 
 const char* history_get_next(void) {
@@ -170,15 +205,22 @@ const char* history_get_next(void) {
         return NULL;
     }
     
+    pthread_mutex_lock(&history_mutex);
+    
     if (nav_position < history_current_count - 1) {
         nav_position++;
-        return history_entries[nav_position];
+        const char *result = history_entries[nav_position];
+        pthread_mutex_unlock(&history_mutex);
+        return result;
     } else {
         nav_position = -1;
+        pthread_mutex_unlock(&history_mutex);
         return "";
     }
 }
 
 void history_reset_position(void) {
+    pthread_mutex_lock(&history_mutex);
     nav_position = -1;
+    pthread_mutex_unlock(&history_mutex);
 }

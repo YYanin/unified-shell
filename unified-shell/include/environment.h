@@ -1,6 +1,8 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
+#include <pthread.h>
+
 #define MAX_VARS 100
 #define VAR_NAME_MAX 64
 #define VAR_VALUE_MAX 256
@@ -12,9 +14,11 @@ typedef struct {
 } Binding;
 
 // Environment structure for variable storage
+// Thread-safe: All access to env must be protected by env_mutex
 typedef struct {
     Binding bindings[MAX_VARS];
     int count;
+    pthread_mutex_t env_mutex;  /* Mutex for thread-safe environment access */
 } Env;
 
 // Environment management functions
