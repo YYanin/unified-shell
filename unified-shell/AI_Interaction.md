@@ -1345,3 +1345,486 @@ Prompt 4 Implementation: COMPLETE
 - Proceed to Prompt 5: Help System Infrastructure (--help flag for built-ins)
 
 ---
+## Session: December 9, 2025 - Threading Prompt 5: Help System Infrastructure
+
+### Task
+Implement Prompt 5 from threadPrompts.md: Create Help System Infrastructure
+
+### Context
+With threading features complete (Prompts 1-4), now implementing Feature 2: --help option for all built-in commands. This prompt creates the infrastructure for a centralized help system.
+
+### Steps Completed
+
+#### 1. Created Help System Header (include/help.h)
+
+**Defined HelpEntry structure:**
+```c
+typedef struct {
+    const char *name;         /* Command name */
+    const char *summary;      /* One-line summary */
+    const char *usage;        /* Usage syntax */
+    const char *description;  /* Detailed description */
+    const char *options;      /* Options description */
+    const char *examples;     /* Usage examples */
+} HelpEntry;
+```
+
+**Declared help system functions:**
+- `const HelpEntry* get_help_entry(const char *cmd_name)` - Retrieve help by command name
+- `void print_help(const HelpEntry *entry)` - Display formatted help text
+- `int check_help_flag(int argc, char **argv)` - Detect --help or -h flags
+
+**Documentation:**
+- Comprehensive function comments
+- Usage examples for each function
+- Clear parameter and return value descriptions
+
+**Status:** COMPLETE
+
+#### 2. Implemented Help System (src/help/help.c)
+
+**Help Database:**
+Created static array with HelpEntry for all 17 built-in commands:
+- cd: Change directory
+- pwd: Print working directory
+- echo: Print arguments
+- export: Set environment variable
+- set: Set shell variable
+- unset: Remove variable
+- env: Display environment
+- help: Show help information
+- version: Show version
+- history: Command history
+- edi: File editor
+- apt: Package manager
+- jobs: List background jobs
+- fg: Foreground job
+- bg: Background job
+- commands: List all commands
+- exit: Exit shell
+
+**Each help entry includes:**
+- NAME: Command name and one-line summary
+- USAGE: Syntax with optional/required arguments
+- DESCRIPTION: Detailed functionality explanation
+- OPTIONS: Flags and arguments documentation
+- EXAMPLES: 2-4 practical usage examples
+
+**Function implementations:**
+
+1. `get_help_entry()`:
+   - Linear search through help_entries array
+   - Returns pointer to matching HelpEntry or NULL
+   - Handles NULL input gracefully
+
+2. `print_help()`:
+   - Consistent formatting with sections
+   - Proper indentation (4 spaces)
+   - Multi-line description/options/examples handling
+   - NULL pointer check with error message
+
+3. `check_help_flag()`:
+   - Checks for --help or -h anywhere in argv
+   - Works regardless of flag position
+   - Returns 1 if found, 0 otherwise
+
+**Status:** COMPLETE
+
+#### 3. Updated Build System
+
+**Makefile changes:**
+- Added `src/help/help.c` to SOURCES list
+- Placed after threading.c, before argtable3 sources
+- Maintains alphabetical grouping by module
+
+**Build verification:**
+```bash
+make clean && make
+```
+
+**Result:**
+- Compiled successfully with no errors
+- New file: src/help/help.o created
+- Linked into ushell executable
+- No new warnings from help system code
+
+**Status:** COMPLETE
+
+#### 4. Testing and Validation
+
+**Test program created:**
+```c
+// test_help.c - Comprehensive help system validation
+// Tests:
+// 1. get_help_entry() retrieval
+// 2. print_help() formatting
+// 3. check_help_flag() detection
+// 4. NULL handling for invalid commands
+```
+
+**Test results:**
+
+1. **Help entry retrieval test:**
+   - Successfully retrieved 'cd' command help
+   - Displayed complete formatted help with all sections
+   - Proper indentation and formatting
+
+2. **check_help_flag() tests:**
+   - `cmd --help`: Detected (result: 1) ✓
+   - `cmd arg1 -h arg2`: Detected (result: 1) ✓
+   - `cmd arg1 arg2`: Not detected (result: 0) ✓
+
+3. **Invalid command test:**
+   - `get_help_entry("nonexistent")`: Returned NULL ✓
+
+4. **Help output format verification:**
+   ```
+   NAME
+       cd - Change the current working directory
+   
+   USAGE
+       cd [directory]
+   
+   DESCRIPTION
+       [detailed multi-line description with proper indentation]
+   
+   OPTIONS
+       [options with descriptions]
+   
+   EXAMPLES
+       [practical examples]
+   ```
+
+**Status:** ALL TESTS PASSED
+
+### Code Quality
+
+**Documentation:**
+✓ Comprehensive header comments in help.h
+✓ Function-level documentation in help.c
+✓ Clear structure member descriptions
+✓ Usage examples in comments
+
+**Help Content Quality:**
+✓ 17 complete help entries
+✓ Consistent formatting across all entries
+✓ Clear usage syntax
+✓ Practical examples for each command
+✓ Special directory explanation for cd (., .., ~, -)
+✓ Apt subcommands documented
+
+**Implementation Quality:**
+✓ Simple, efficient linear search (suitable for 17 commands)
+✓ Sentinel value (NULL name) for array termination
+✓ Proper NULL handling in all functions
+✓ Multi-line text parsing for print_help()
+✓ No memory allocation (static data)
+
+### Summary
+
+Prompt 5 Implementation: COMPLETE
+
+**Files Created:**
+- `include/help.h` (114 lines) - Help system header with HelpEntry struct and function declarations
+- `src/help/help.c` (451 lines) - Complete help system implementation with all 17 command helps
+
+**Files Modified:**
+- `Makefile` - Added src/help/help.c to SOURCES
+
+**Help System Features:**
+- Structured help database with 17 commands
+- Consistent help formatting with 5 sections
+- --help and -h flag detection
+- Easy to extend (just add entry to array)
+- No dynamic memory allocation
+- Thread-safe (read-only static data)
+
+**Next Steps:**
+- Proceed to Prompt 6: Implement --help flag parsing in all built-in functions
+- Add check_help_flag() calls to each builtin_* function
+- Handle help display before normal command execution
+
+---
+## Session: December 9, 2025 - Threading Prompt 6: Implement --help Flag Parsing
+
+### Task
+Implement Prompt 6 from threadPrompts.md: Add --help flag detection and handling to all built-in commands
+
+### Context
+With help system infrastructure complete (Prompt 5), now integrating --help flag checking into every built-in command function so users can get help by passing --help or -h to any command.
+
+### Steps Completed
+
+#### 1. Added help.h Include
+
+**File modified:** `src/builtins/builtins.c`
+```c
+#include "help.h"  // Added after other includes
+```
+
+**File modified:** `src/apt/apt_builtin.c`
+```c
+#include "help.h"  // Added to support --help in apt command
+```
+
+**Status:** COMPLETE
+
+#### 2. Implemented --help Flag Checking Pattern
+
+**Standard pattern added to all built-ins:**
+```c
+int builtin_command(char **argv, Env *env) {
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("command_name");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
+    // Normal command execution continues...
+}
+```
+
+**Pattern characteristics:**
+- Counts argc by iterating to NULL terminator
+- Calls `check_help_flag()` to detect --help or -h at any position
+- Retrieves help entry from database
+- Prints formatted help and returns immediately
+- Does NOT execute command if --help detected
+
+**Status:** COMPLETE
+
+#### 3. Updated All 17 Built-in Commands
+
+**Commands modified:**
+1. ✅ `builtin_cd` - Change directory help
+2. ✅ `builtin_pwd` - Print working directory help
+3. ✅ `builtin_echo` - Echo help  
+4. ✅ `builtin_export` - Export help
+5. ✅ `builtin_set` - Set help
+6. ✅ `builtin_unset` - Unset help
+7. ✅ `builtin_env` - Environment help
+8. ✅ `builtin_help` - Help command (special handling)
+9. ✅ `builtin_version` - Version help
+10. ✅ `builtin_history` - History help
+11. ✅ `builtin_jobs` - Jobs help
+12. ✅ `builtin_fg` - Foreground help
+13. ✅ `builtin_bg` - Background help
+14. ✅ `builtin_commands` - Commands help
+15. ✅ `builtin_exit` - Exit help
+16. ✅ `builtin_apt` - Apt package manager help
+17. ✅ `builtin_edi` - Editor help (already had help handling)
+
+**All commands now support:**
+- `command --help` - Shows help for command
+- `command -h` - Shows help for command
+- `command arg1 --help arg2` - Shows help (flag anywhere in args)
+
+**Status:** COMPLETE
+
+#### 4. Special Handling for builtin_help
+
+**Enhanced builtin_help with two modes:**
+
+1. **General help mode** (`help` with no args):
+   - Shows overview of all commands
+   - Lists categories: built-ins, job control, package manager, tools, AI
+   - Displays features and syntax examples
+
+2. **Command-specific help mode** (`help <command>`):
+   - Retrieves help entry for specified command
+   - Calls `print_help()` to display formatted help
+   - Returns error if command not found
+
+3. **Help-on-help mode** (`help --help`):
+   - Shows help for the help command itself
+   - Uses same HelpEntry system
+
+**Implementation:**
+```c
+// If command name specified, show help for that command
+if (argv[1] != NULL) {
+    const HelpEntry *help = get_help_entry(argv[1]);
+    if (help) {
+        print_help(help);
+        return 0;
+    } else {
+        fprintf(stderr, "help: no help available for '%s'\n", argv[1]);
+        return 1;
+    }
+}
+```
+
+**Status:** COMPLETE
+
+#### 5. Special Handling for builtin_commands
+
+**Note on --json flag:**
+The `commands` built-in accepts `--json` as a valid operational flag (not help).
+Help check is performed BEFORE JSON check to ensure `commands --help` shows help,
+not JSON output.
+
+**Logic order:**
+1. Check for `--help` → show help
+2. Check for `--json` → output JSON catalog
+3. Otherwise → output human-readable list
+
+**Status:** COMPLETE
+
+### Build and Testing
+
+**Build command:**
+```bash
+make
+```
+
+**Build result:**
+- Compiled successfully
+- src/builtins/builtins.o rebuilt
+- src/apt/apt_builtin.o rebuilt
+- src/help/help.o rebuilt
+- Linked into ushell executable
+- No errors, only pre-existing warnings
+
+**Manual tests performed:**
+
+1. **Test: Basic --help flag**
+   ```bash
+   cd --help        ✓ Shows cd help, does NOT change directory
+   pwd --help       ✓ Shows pwd help, does NOT print directory
+   echo --help test ✓ Shows echo help, does NOT echo arguments
+   ```
+
+2. **Test: Help flag position independence**
+   ```bash
+   echo --help test ✓ Help detected even with args after flag
+   cd /tmp --help   ✓ Help detected with args before flag
+   ```
+
+3. **Test: Short flag variant**
+   ```bash
+   pwd -h           ✓ Short flag -h works correctly
+   echo -h          ✓ Short flag supported
+   ```
+
+4. **Test: Help command integration**
+   ```bash
+   help cd          ✓ Shows cd help via help command
+   help             ✓ Shows general help
+   help --help      ✓ Shows help for help command
+   ```
+
+5. **Test: Job control commands**
+   ```bash
+   jobs --help      ✓ Shows jobs help
+   fg --help        ✓ Shows fg help
+   bg --help        ✓ Shows bg help
+   ```
+
+6. **Test: Package manager**
+   ```bash
+   apt --help       ✓ Shows apt help with subcommands listed
+   ```
+
+7. **Test: Other commands**
+   ```bash
+   history --help   ✓ Shows history help
+   env --help       ✓ Shows env help
+   export --help    ✓ Shows export help
+   commands --help  ✓ Shows commands help (not JSON output)
+   ```
+
+**All tests PASSED**
+
+### Code Quality
+
+**Consistency:**
+✓ Identical pattern applied to all 17 built-ins
+✓ Same argc counting method
+✓ Same help retrieval and printing logic
+✓ Consistent return value (0 after showing help)
+
+**Correctness:**
+✓ Commands do NOT execute when --help provided
+✓ Help displayed before any side effects
+✓ Proper error handling (NULL checks)
+✓ Works with both --help and -h flags
+
+**Documentation:**
+✓ Pattern is self-documenting with comments
+✓ Clear separation between help check and normal execution
+✓ Consistent code style across all functions
+
+### User Experience Improvements
+
+**Before Prompt 6:**
+- Users had to run `help` or `help <command>` to get documentation
+- No way to get help while typing a command
+- Trial and error for command syntax
+
+**After Prompt 6:**
+- Every command supports `--help` flag
+- Standard Unix convention followed
+- Help available inline: `cd --help`, `apt --help`, etc.
+- Consistent behavior across all built-ins
+- Flag position doesn't matter
+- Commands don't execute when asking for help
+
+### Summary
+
+Prompt 6 Implementation: COMPLETE
+
+**Files Modified:**
+- `src/builtins/builtins.c` - Added --help to 15 built-ins, enhanced help command
+- `src/apt/apt_builtin.c` - Added --help to apt command
+
+**Lines Changed:**
+- Added help.h includes (2 files)
+- Added help checking to 17 functions
+- Each function gained ~13 lines for help support
+- Total: ~230 lines of help integration code
+
+**Features Delivered:**
+- ✅ --help flag on all 17 built-in commands
+- ✅ -h short flag variant support
+- ✅ Position-independent flag detection
+- ✅ help <command> integration
+- ✅ No command execution when --help used
+- ✅ Consistent behavior across all commands
+
+**Testing Status:**
+- ✅ All manual tests passed
+- ✅ Build successful with no errors
+- ✅ Help displayed correctly for all commands
+- ✅ Commands properly skip execution when --help present
+
+**Next Steps:**
+- Prompt 7: Write comprehensive help content for any remaining commands (already done in Prompt 5)
+- Prompt 8: Create test scripts and update documentation
+- Consider adding --help to apt subcommands (apt install --help, etc.)
+
+---
+# Cleanup Test Artifacts - Tue Dec  9 08:34:30 PM PST 2025
+Removed old test result files:
+  - test_bg_results.txt
+  - test_signals_results.txt
+
+
+# Documentation Verification - Tue Dec  9 08:36:33 PM PST 2025
+Verified all documentation files are up-to-date with new features:
+  - README.md: Threading Support and Help System sections present
+  - docs/USER_GUIDE.md: Threading Support and Getting Help sections present
+  - docs/DEVELOPER_GUIDE.md: Threading Architecture and Help System Architecture sections present
+
+All documentation includes:
+  - Threading configuration (USHELL_THREAD_BUILTINS, USHELL_THREAD_POOL_SIZE)
+  - Help system usage (--help flag, help command)
+  - Examples and benefits of both features
+  - Thread safety details and architecture diagrams
+

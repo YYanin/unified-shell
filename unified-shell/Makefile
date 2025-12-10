@@ -53,6 +53,7 @@ SRCS = src/main.c \
        src/jobs/jobs.c \
        src/jobs/signals.c \
        src/threading/threading.c \
+       src/help/help.c \
        src/argtable3/arg_cmd.c \
        src/argtable3/arg_date.c \
        src/argtable3/arg_dbl.c \

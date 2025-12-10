@@ -57,7 +57,7 @@ Built from the ground up using C, ushell demonstrates systems programming concep
 - DONE **Character Classes** - `[abc]`, `[a-z]`, `[!abc]`
 - DONE **Multi-pattern** - Multiple globs in single command
 
-### Built-in Commands (16)
+### Built-in Commands (17)
 - DONE `cd [dir]` - Change directory (default: $HOME)
 - DONE `pwd` - Print working directory
 - DONE `echo [args...]` - Display arguments with variable expansion
@@ -65,7 +65,7 @@ Built from the ground up using C, ushell demonstrates systems programming concep
 - DONE `set VAR=value` - Set shell-local variable
 - DONE `unset VAR` - Remove variable
 - DONE `env` - Display all environment variables
-- DONE `help` - Display comprehensive help message
+- DONE `help [command]` - Display help message (general or command-specific)
 - DONE `version` - Show version and build information
 - DONE `history` - Show command history
 - DONE `edi [file]` - Vi-like text editor (modal: normal/insert/command)
@@ -73,6 +73,7 @@ Built from the ground up using C, ushell demonstrates systems programming concep
 - DONE `jobs [-l|-p|-r|-s]` - List background jobs with various formats
 - DONE `fg [%n]` - Bring background/stopped job to foreground
 - DONE `bg [%n]` - Resume stopped job in background
+- DONE `commands` - List all available built-in commands
 - DONE `exit` - Exit the shell
 
 ### Package Management System
@@ -111,6 +112,57 @@ make
 
 # Run the shell
 ./ushell
+```
+
+### Threading Support
+
+The shell supports multi-threaded execution of built-in commands for improved performance and responsiveness.
+
+**Enable/Disable Threading:**
+```bash
+# Enable threading (default: enabled)
+export USHELL_THREAD_BUILTINS=1
+./ushell
+
+# Disable threading (use traditional fork/exec)
+export USHELL_THREAD_BUILTINS=0
+./ushell
+
+# Or unset the variable
+unset USHELL_THREAD_BUILTINS
+./ushell
+```
+
+**Configure Thread Pool:**
+```bash
+# Set custom thread pool size (default: 4 workers)
+export USHELL_THREAD_POOL_SIZE=8
+./ushell
+```
+
+**Benefits:**
+- Faster execution of built-in commands
+- Lower overhead compared to fork/exec
+- Responsive shell during command execution
+- Thread-safe access to history, jobs, and environment
+
+### Help System
+
+All built-in commands support the `--help` flag for detailed usage information:
+
+```bash
+# Get help for any command
+cd --help
+pwd --help
+echo --help
+
+# Use the help command
+help              # List all commands
+help cd           # Show help for cd
+help export       # Show help for export
+
+# Short form also works
+pwd -h
 ```
 
 ### First Commands

@@ -2,19 +2,21 @@
 
 ## Table of Contents
 1. [Architecture Overview](#architecture-overview)
-2. [Interactive System Architecture](#interactive-system-architecture)
-3. [Code Structure](#code-structure)
-4. [Build System](#build-system)
-5. [Parser & Grammar](#parser--grammar)
-6. [Evaluation Pipeline](#evaluation-pipeline)
-7. [Job Control System](#job-control-system)
-8. [AI Integration System](#ai-integration-system)
-9. [Memory Management](#memory-management)
-10. [Adding Features](#adding-features)
-11. [Testing Guidelines](#testing-guidelines)
-12. [Code Style Guide](#code-style-guide)
-13. [Debugging](#debugging)
-14. [Performance Considerations](#performance-considerations)
+2. [Threading Architecture](#threading-architecture)
+3. [Help System Architecture](#help-system-architecture)
+4. [Interactive System Architecture](#interactive-system-architecture)
+5. [Code Structure](#code-structure)
+6. [Build System](#build-system)
+7. [Parser & Grammar](#parser--grammar)
+8. [Evaluation Pipeline](#evaluation-pipeline)
+9. [Job Control System](#job-control-system)
+10. [AI Integration System](#ai-integration-system)
+11. [Memory Management](#memory-management)
+12. [Adding Features](#adding-features)
+13. [Testing Guidelines](#testing-guidelines)
+14. [Code Style Guide](#code-style-guide)
+15. [Debugging](#debugging)
+16. [Performance Considerations](#performance-considerations)
 
 ---
 
@@ -73,9 +75,32 @@ main.c
   ├─→ Interactive Input (terminal.c)
   ├─→ History Management (history.c)
   ├─→ Tab Completion (completion.c)
+  ├─→ Threading System (threading.c)
   ├─→ Parser (pProgram)
   ├─→ Evaluator (eval_program)
   └─→ Cleanup (atexit)
+
+Threading System
+  ├─→ Threading (threading.c)
+  │     ├─→ Thread pool initialization
+  │     ├─→ Work queue management
+  │     ├─→ Worker thread lifecycle
+  │     └─→ Graceful shutdown
+  └─→ Thread Safety
+        ├─→ Environment (pthread_mutex)
+        ├─→ History (pthread_mutex)
+        ├─→ Jobs (pthread_mutex)
+        └─→ Terminal (pthread_mutex)
+
+Help System
+  ├─→ Help (help.c)
+  │     ├─→ Help entry database
+  │     ├─→ Help retrieval
+  │     └─→ Help formatting
+  └─→ Built-in Integration
+        ├─→ --help flag checking
+        ├─→ help command dispatcher
+        └─→ Usage display
 
 Interactive System
   ├─→ Terminal (terminal.c)
@@ -100,10 +125,15 @@ Evaluator
   └─→ External Execution
 
 Executor
-  ├─→ Process Creation (fork)
-  ├─→ Pipeline Setup (pipe)
-  ├─→ I/O Redirection (dup2)
-  └─→ Wait/Collect Status
+  ├─→ Threading Mode (if enabled)
+  │     ├─→ Thread pool submission
+  │     ├─→ Work item creation
+  │     └─→ Synchronization
+  └─→ Fork/Exec Mode (if disabled)
+        ├─→ Process Creation (fork)
+        ├─→ Pipeline Setup (pipe)
+        ├─→ I/O Redirection (dup2)
+        └─→ Wait/Collect Status
 
 APT Package Manager
   ├─→ apt_builtin (dispatcher)
@@ -112,6 +142,309 @@ APT Package Manager
   ├─→ remove (recursive deletion, verification)
   └─→ depends (resolution, circular detection)
 ```
+
+---
+
+## Threading Architecture
+
+### Overview
+
+The shell uses POSIX threads (pthreads) to execute built-in commands concurrently, providing faster execution and improved responsiveness compared to traditional fork/exec.
+
+### Thread Pool Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                   Thread Pool                            │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │            Work Queue (Circular Buffer)            │  │
+│  │  [WorkItem] → [WorkItem] → [WorkItem] → ...       │  │
+│  └──────────────┬─────────────────────────────────────┘  │
+│                 │                                         │
+│  ┌──────────────▼──────────────────────────────────────┐ │
+│  │         Condition Variables & Mutexes              │ │
+│  │  - work_available (cv)                             │ │
+│  │  - queue_mutex (protects work queue)               │ │
+│  └────────────────────────────────────────────────────┘  │
+│                                                           │
+│  ┌────────────────────────────────────────────────────┐  │
+│  │              Worker Threads                        │  │
+│  │  Thread 1 → waiting/executing                      │  │
+│  │  Thread 2 → waiting/executing                      │  │
+│  │  Thread 3 → waiting/executing                      │  │
+│  │  Thread 4 → waiting/executing                      │  │
+│  └────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Data Structures
+
+#### WorkItem
+```c
+typedef struct {
+    BuiltinFunc func;        // Function pointer to built-in
+    int argc;                // Argument count
+    char **argv;             // Argument vector
+    int *result;             // Pointer to store result
+    pthread_mutex_t *done_mutex;    // Completion synchronization
+    pthread_cond_t *done_cond;      // Completion notification
+    int *done_flag;          // Completion indicator
+} WorkItem;
+```
+
+#### ThreadPool
+```c
+typedef struct {
+    pthread_t *threads;                  // Worker thread array
+    int num_threads;                     // Number of workers
+    WorkItem *queue;                     // Circular work queue
+    int queue_size;                      // Queue capacity
+    int queue_head;                      // Queue read position
+    int queue_tail;                      // Queue write position
+    int queue_count;                     // Current items in queue
+    pthread_mutex_t queue_mutex;         // Queue protection
+    pthread_cond_t work_available;       // Work notification
+    pthread_cond_t work_done;            // Completion notification
+    int shutdown;                        // Shutdown flag
+} ThreadPool;
+```
+
+### Thread Safety Mechanisms
+
+All global state is protected with mutexes:
+
+```c
+// Environment variables
+extern pthread_mutex_t env_mutex;
+void env_lock();
+void env_unlock();
+
+// History
+extern pthread_mutex_t history_mutex;
+void history_lock();
+void history_unlock();
+
+// Job control
+extern pthread_mutex_t jobs_mutex;
+void jobs_lock();
+void jobs_unlock();
+
+// Terminal
+extern pthread_mutex_t terminal_mutex;
+void terminal_lock();
+void terminal_unlock();
+```
+
+### Execution Flow
+
+```
+Built-in Command Execution (Threading Enabled)
+        │
+        ├─→ Check USHELL_THREAD_BUILTINS
+        │
+        ├─→ Create WorkItem
+        │     ├─→ Set func pointer
+        │     ├─→ Copy argc/argv
+        │     ├─→ Initialize sync primitives
+        │     └─→ Allocate result storage
+        │
+        ├─→ Submit to Thread Pool
+        │     ├─→ Lock queue_mutex
+        │     ├─→ Add to circular queue
+        │     ├─→ Signal work_available
+        │     └─→ Unlock queue_mutex
+        │
+        ├─→ Worker Thread Picks Up
+        │     ├─→ Wait on work_available
+        │     ├─→ Dequeue WorkItem
+        │     ├─→ Execute func(argc, argv)
+        │     └─→ Store result
+        │
+        └─→ Wait for Completion
+              ├─→ Lock done_mutex
+              ├─→ Wait on done_cond
+              ├─→ Retrieve result
+              └─→ Cleanup WorkItem
+```
+
+### Configuration
+
+Threading is controlled by environment variables:
+
+- `USHELL_THREAD_BUILTINS`: Enable (1) or disable (0/unset) threading
+- `USHELL_THREAD_POOL_SIZE`: Number of worker threads (default: 4)
+
+### Thread Safety Requirements for New Built-ins
+
+When adding new built-in commands:
+
+1. **Avoid Global State**: Use local variables when possible
+2. **Protect Shared Access**: Use existing mutexes for environment, history, jobs, terminal
+3. **Lock Order**: Always acquire mutexes in consistent order to prevent deadlock
+4. **Minimize Lock Duration**: Hold locks only as long as necessary
+5. **Thread-Safe Functions**: Use reentrant versions of standard library functions
+
+Example thread-safe built-in:
+```c
+int builtin_mycommand(int argc, char **argv) {
+    // Check help flag first (before any locks)
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *entry = get_help_entry("mycommand");
+        if (entry) {
+            print_help(entry);
+            return 0;
+        }
+    }
+    
+    // Acquire locks only when needed
+    env_lock();
+    char *value = getenv("MY_VAR");
+    // Copy data while holding lock
+    char local_copy[256];
+    if (value) {
+        strncpy(local_copy, value, sizeof(local_copy) - 1);
+    }
+    env_unlock();
+    
+    // Process without holding lock
+    // ...
+    
+    return 0;
+}
+```
+
+---
+
+## Help System Architecture
+
+### Overview
+
+The help system provides comprehensive documentation for all built-in commands through a centralized database and consistent interface.
+
+### Data Structures
+
+#### HelpEntry
+```c
+typedef struct {
+    const char *name;         // Command name
+    const char *summary;      // One-line description
+    const char *usage;        // Usage syntax
+    const char *description;  // Detailed explanation
+    const char *options;      // Available options
+    const char *examples;     // Usage examples
+} HelpEntry;
+```
+
+### Help Database
+
+All help entries are stored in a static array in `src/help/help.c`:
+
+```c
+static const HelpEntry help_entries[] = {
+    {
+        "cd",
+        "change directory",
+        "cd [directory]",
+        "Change the current working directory...",
+        "--help, -h    Display this help message",
+        "cd /tmp\ncd ..\ncd"
+    },
+    // ... more entries ...
+    { NULL, NULL, NULL, NULL, NULL, NULL }  // Sentinel
+};
+```
+
+### Help Functions
+
+#### get_help_entry()
+```c
+const HelpEntry* get_help_entry(const char *cmd_name);
+```
+Retrieves help entry by command name. Returns NULL if not found.
+
+#### print_help()
+```c
+void print_help(const HelpEntry *entry);
+```
+Formats and displays help with consistent structure:
+- NAME section
+- USAGE section
+- DESCRIPTION section
+- OPTIONS section (if present)
+- EXAMPLES section (if present)
+
+#### check_help_flag()
+```c
+int check_help_flag(int argc, char **argv);
+```
+Scans argv for `--help` or `-h` at any position. Returns 1 if found, 0 otherwise.
+
+### Integration Pattern
+
+Every built-in command follows this pattern:
+
+```c
+int builtin_command(int argc, char **argv) {
+    // Help flag takes precedence
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *entry = get_help_entry("command");
+        if (entry) {
+            print_help(entry);
+            return 0;
+        }
+    }
+    
+    // Normal command execution
+    // ...
+}
+```
+
+### Adding Help for New Commands
+
+1. **Add HelpEntry to help_entries array** in `src/help/help.c`:
+```c
+{
+    "newcommand",
+    "brief description",
+    "newcommand [options] [args]",
+    "Detailed explanation of what the command does...",
+    "--help, -h    Display help\n"
+    "--flag        Description of flag",
+    "newcommand arg1\n"
+    "newcommand --flag arg2"
+},
+```
+
+2. **Add help check** to built-in function in `src/builtins/builtins.c`:
+```c
+int builtin_newcommand(int argc, char **argv) {
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *entry = get_help_entry("newcommand");
+        if (entry) {
+            print_help(entry);
+            return 0;
+        }
+    }
+    // Command implementation
+}
+```
+
+3. **Include help.h** in source file:
+```c
+#include "help.h"
+```
+
+4. **Update command count** in documentation (README.md, USER_GUIDE.md)
+
+### Help System Features
+
+- **Comprehensive Coverage**: All 17 built-in commands have help entries
+- **Consistent Format**: Uniform structure across all commands
+- **Position-Independent**: --help works anywhere in argument list
+- **Short Form Support**: Both --help and -h work
+- **Non-Execution**: Help flag prevents command execution
+- **Zero Exit Status**: Help display returns success (0)
+- **Thread-Safe**: Help database is read-only static data
 
 ---
 

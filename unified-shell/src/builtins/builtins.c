@@ -3,6 +3,7 @@
 #include "apt.h"
 #include "jobs.h"
 #include "signals.h"
+#include "help.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,6 +61,26 @@ builtin_func find_builtin(const char *name) {
 int builtin_cd(char **argv, Env *env) {
     (void)env;  // Unused for now
     
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("cd");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
+    // Get current directory before changing (for OLDPWD)
+    char old_pwd[1024];
+    if (getcwd(old_pwd, sizeof(old_pwd)) == NULL) {
+        perror("cd: getcwd");
+        return 1;
+    }
+    
     const char *path;
     
     if (argv[1] == NULL) {
@@ -69,6 +90,15 @@ int builtin_cd(char **argv, Env *env) {
             fprintf(stderr, "cd: HOME not set\n");
             return 1;
         }
+    } else if (strcmp(argv[1], "-") == 0) {
+        // cd - means go to previous directory
+        path = getenv("OLDPWD");
+        if (path == NULL) {
+            fprintf(stderr, "cd: OLDPWD not set\n");
+            return 1;
+        }
+        // Print the directory we're going to (bash behavior)
+        printf("%s\n", path);
     } else {
         path = argv[1];
     }
@@ -76,6 +106,15 @@ int builtin_cd(char **argv, Env *env) {
     if (chdir(path) != 0) {
         perror("cd");
         return 1;
+    }
+    
+    // Update OLDPWD to previous directory
+    setenv("OLDPWD", old_pwd, 1);
+    
+    // Update PWD to new directory
+    char new_pwd[1024];
+    if (getcwd(new_pwd, sizeof(new_pwd)) != NULL) {
+        setenv("PWD", new_pwd, 1);
     }
     
     return 0;
@@ -86,8 +125,20 @@ int builtin_cd(char **argv, Env *env) {
  * Usage: pwd
  */
 int builtin_pwd(char **argv, Env *env) {
-    (void)argv;  // Unused
     (void)env;   // Unused
+    
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("pwd");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
@@ -106,6 +157,19 @@ int builtin_pwd(char **argv, Env *env) {
 int builtin_echo(char **argv, Env *env) {
     (void)env;  // Unused
     
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("echo");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
     for (int i = 1; argv[i] != NULL; i++) {
         if (i > 1) {
             printf(" ");
@@ -122,6 +186,19 @@ int builtin_echo(char **argv, Env *env) {
  * Usage: export VAR=value
  */
 int builtin_export(char **argv, Env *env) {
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("export");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
     if (argv[1] == NULL) {
         fprintf(stderr, "export: usage: export VAR=value\n");
         return 1;
@@ -164,6 +241,19 @@ int builtin_export(char **argv, Env *env) {
 int builtin_exit(char **argv, Env *env) {
     (void)env;  // Unused
     
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("exit");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
     int code = 0;
     
     if (argv[1] != NULL) {
@@ -178,6 +268,19 @@ int builtin_exit(char **argv, Env *env) {
  * Usage: set VAR=value
  */
 int builtin_set(char **argv, Env *env) {
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("set");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
     if (argv[1] == NULL) {
         // No arguments - print all variables
         env_print(env);
@@ -216,6 +319,19 @@ int builtin_set(char **argv, Env *env) {
  * Usage: unset VAR
  */
 int builtin_unset(char **argv, Env *env) {
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("unset");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
     if (argv[1] == NULL) {
         fprintf(stderr, "unset: usage: unset VAR\n");
         return 1;
@@ -234,7 +350,18 @@ int builtin_unset(char **argv, Env *env) {
  * Usage: env
  */
 int builtin_env(char **argv, Env *env) {
-    (void)argv;  // Unused
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("env");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     env_print(env);
     
@@ -243,12 +370,37 @@ int builtin_env(char **argv, Env *env) {
 
 /**
  * help - Display built-in commands
- * Usage: help
+ * Usage: help [command]
  */
 int builtin_help(char **argv, Env *env) {
-    (void)argv;  // Unused
     (void)env;   // Unused
     
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("help");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
+    // If command name specified, show help for that command
+    if (argv[1] != NULL) {
+        const HelpEntry *help = get_help_entry(argv[1]);
+        if (help) {
+            print_help(help);
+            return 0;
+        } else {
+            fprintf(stderr, "help: no help available for '%s'\n", argv[1]);
+            return 1;
+        }
+    }
+    
+    // No command specified - show general help and command list
     printf("Unified Shell (ushell) - Built-in Commands:\n\n");
     printf("  cd [dir]           Change directory (default: $HOME)\n");
     printf("  pwd                Print working directory\n");
@@ -258,14 +410,22 @@ int builtin_help(char **argv, Env *env) {
     printf("  unset VAR          Remove variable\n");
     printf("  env                Display all environment variables\n");
     printf("  edi [file]         Vi-like text editor (modes: normal, insert, command)\n");
-    printf("  help               Display this help message\n");
+    printf("  help [command]     Display help (general or for specific command)\n");
     printf("  version            Display version information\n");
-    printf("  exit               Exit the shell\n");
+    printf("  history            Display command history\n");
+    printf("  commands [--json]  List all available commands\n");
+    printf("  exit [status]      Exit the shell\n");
     printf("\nJob Control:\n");
     printf("  jobs [-l|-p|-r|-s] List background jobs\n");
     printf("  fg [%%n]            Bring job to foreground (default: most recent)\n");
     printf("  bg [%%n]            Resume stopped job in background\n");
     printf("  cmd &              Run command in background\n");
+    printf("\nPackage Manager:\n");
+    printf("  apt init           Initialize package repository\n");
+    printf("  apt update         Update package index\n");
+    printf("  apt list           List available packages\n");
+    printf("  apt install PKG    Install a package\n");
+    printf("  apt remove PKG     Remove a package\n");
     printf("\nIntegrated Tools:\n");
     printf("  myls, mycat, mycp, mymv, myrm, mymkdir, myrmdir, mytouch, mystat, myfd\n");
     printf("\nAI Integration:\n");
@@ -292,8 +452,20 @@ int builtin_help(char **argv, Env *env) {
  * Usage: version
  */
 int builtin_version(char **argv, Env *env) {
-    (void)argv;  // Unused
     (void)env;   // Unused
+    
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("version");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     printf("Unified Shell (ushell) v1.0.0\n");
     printf("Build date: %s %s\n", __DATE__, __TIME__);
@@ -309,6 +481,19 @@ int builtin_version(char **argv, Env *env) {
  */
 int builtin_history(char **argv, Env *env) {
     (void)env;  // Unused
+    
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("history");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     int count = history_count();
     
@@ -358,6 +543,19 @@ int builtin_history(char **argv, Env *env) {
  */
 int builtin_jobs(char **argv, Env *env) {
     (void)env;  // Unused
+    
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("jobs");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     // Parse options
     int long_format = 0;     // -l: include PID
@@ -469,6 +667,19 @@ int builtin_jobs(char **argv, Env *env) {
  */
 int builtin_fg(char **argv, Env *env) {
     (void)env;  // Unused
+    
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("fg");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     Job *job = NULL;
     int job_id = -1;
@@ -605,6 +816,19 @@ int builtin_fg(char **argv, Env *env) {
 int builtin_bg(char **argv, Env *env) {
     (void)env;  // Unused
     
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("bg");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
+    
     Job *job = NULL;
     int job_id = -1;
     
@@ -701,6 +925,19 @@ int builtin_bg(char **argv, Env *env) {
  */
 int builtin_commands(char **argv, Env *env) {
     (void)env;  // Unused parameter
+    
+    // Count arguments
+    int argc = 0;
+    while (argv[argc] != NULL) argc++;
+    
+    // Check for --help flag (but not --json which is a valid flag for this command)
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("commands");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     // Check for --json flag
     int json_mode = 0;

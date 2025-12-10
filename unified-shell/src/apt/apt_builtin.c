@@ -17,6 +17,7 @@
 
 #include "apt.h"
 #include "environment.h"
+#include "help.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -431,6 +432,15 @@ int builtin_apt(char **argv, Env *env) {
     /* Count argc */
     int argc = 0;
     while (argv[argc] != NULL) argc++;
+    
+    /* Check for --help flag */
+    if (check_help_flag(argc, argv)) {
+        const HelpEntry *help = get_help_entry("apt");
+        if (help) {
+            print_help(help);
+            return 0;
+        }
+    }
     
     /* Check for subcommand */
     if (argv[1] == NULL) {

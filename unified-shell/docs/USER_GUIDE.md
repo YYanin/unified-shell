@@ -2,20 +2,22 @@
 
 ## Table of Contents
 1. [Getting Started](#getting-started)
-2. [Interactive Features](#interactive-features)
-3. [Basic Commands](#basic-commands)
-4. [Variables](#variables)
-5. [Arithmetic Operations](#arithmetic-operations)
-6. [Control Flow](#control-flow)
-7. [Pipelines](#pipelines)
-8. [I/O Redirection](#io-redirection)
-9. [Glob Expansion](#glob-expansion)
-10. [Built-in Commands](#built-in-commands)
-11. [Job Control](#job-control)
-12. [Package Management (APT)](#package-management-apt)
-13. [Integrated Tools](#integrated-tools)
-14. [Tips and Tricks](#tips-and-tricks)
-15. [Troubleshooting](#troubleshooting)
+2. [Threading Support](#threading-support)
+3. [Getting Help](#getting-help)
+4. [Interactive Features](#interactive-features)
+5. [Basic Commands](#basic-commands)
+6. [Variables](#variables)
+7. [Arithmetic Operations](#arithmetic-operations)
+8. [Control Flow](#control-flow)
+9. [Pipelines](#pipelines)
+10. [I/O Redirection](#io-redirection)
+11. [Glob Expansion](#glob-expansion)
+12. [Built-in Commands](#built-in-commands)
+13. [Job Control](#job-control)
+14. [Package Management (APT)](#package-management-apt)
+15. [Integrated Tools](#integrated-tools)
+16. [Tips and Tricks](#tips-and-tricks)
+17. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -47,12 +49,158 @@ exit
 exit 0
 ```
 
-### Getting Help
+---
+
+## Threading Support
+
+The shell supports multi-threaded execution of built-in commands for improved performance and responsiveness.
+
+### Enabling/Disabling Threading
+
+Threading is enabled by default. You can control it with the `USHELL_THREAD_BUILTINS` environment variable:
 
 ```bash
-# Display all commands and features
+# Enable threading (default)
+export USHELL_THREAD_BUILTINS=1
+./ushell
+
+# Disable threading (use traditional fork/exec)
+export USHELL_THREAD_BUILTINS=0
+./ushell
+
+# Or unset the variable to disable
+unset USHELL_THREAD_BUILTINS
+./ushell
+```
+
+### Configuring Thread Pool Size
+
+The shell uses a thread pool with 4 worker threads by default. You can customize this:
+
+```bash
+# Use 8 worker threads
+export USHELL_THREAD_POOL_SIZE=8
+./ushell
+
+# Use 2 worker threads (minimal)
+export USHELL_THREAD_POOL_SIZE=2
+./ushell
+```
+
+### When to Use Threading
+
+**Threading is beneficial for:**
+- Faster execution of built-in commands
+- Improved shell responsiveness
+- Lower overhead compared to fork/exec
+- Concurrent command execution in scripts
+
+**Traditional fork/exec may be preferred when:**
+- Debugging command execution
+- Testing process isolation
+- Compatibility testing
+
+### Thread Safety
+
+All shell features are thread-safe:
+- Command history is protected with mutexes
+- Job control maintains consistency across threads
+- Environment variable access is synchronized
+- Terminal operations are serialized
+
+### Example Usage
+
+```bash
+# Start shell with threading enabled
+export USHELL_THREAD_BUILTINS=1
+export USHELL_THREAD_POOL_SIZE=4
+./ushell
+
+# Commands execute in threads
+cd /tmp
+pwd
+echo "Threading enabled"
+history
+
+# Shell remains responsive during command execution
+```
+
+---
+
+## Getting Help
+
+The shell provides comprehensive help for all commands.
+
+### Using the --help Flag
+
+Every built-in command supports the `--help` flag (and its short form `-h`):
+
+```bash
+# Get help for any command
+cd --help
+pwd --help
+echo --help
+export --help
+jobs --help
+apt --help
+
+# Short form also works
+cd -h
+pwd -h
+```
+
+### Using the help Command
+
+The `help` command provides both general and command-specific help:
+
+```bash
+# Show general help and list all commands
 help
 
+# Show help for a specific command
+help cd
+help export
+help jobs
+help apt
+
+# List all available commands
+commands
+```
+
+### Help Output Format
+
+Each command's help includes:
+
+- **NAME**: Command name and brief description
+- **USAGE**: Command syntax and options
+- **DESCRIPTION**: Detailed explanation of what the command does
+- **OPTIONS**: Available flags and their meanings
+- **EXAMPLES**: Real-world usage examples
+
+Example:
+```bash
+ushell> pwd --help
+
+NAME
+    pwd - print working directory
+
+USAGE
+    pwd [--help|-h]
+
+DESCRIPTION
+    Prints the current working directory to standard output.
+
+OPTIONS
+    --help, -h    Display this help message
+
+EXAMPLES
+    pwd                  # Print current directory
+    cd /tmp && pwd       # Change dir and print
+```
+
+### Getting Version Information
+
+```bash
 # Show version information
 version
 ```
