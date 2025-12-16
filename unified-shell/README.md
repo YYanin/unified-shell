@@ -99,6 +99,14 @@ All tools accessible directly within the shell:
 - DONE `mystat file...` - Display file status
 - DONE `myfd pattern [dir]` - Find files by pattern
 
+### AI Integration (Model Context Protocol)
+- DONE **MCP Server** - TCP-based JSON protocol for AI agent interaction
+- DONE **Tool Catalog** - 50+ shell commands exposed as structured tools
+- DONE **Special AI Tools** - Context retrieval, command search, natural language suggestions
+- DONE **Secure Execution** - Multi-layer security (blacklist, sanitization, resource limits)
+- DONE **Progress Notifications** - Real-time execution status updates
+- DONE **Audit Logging** - Complete command execution history
+
 ## Quick Start
 
 ### Installation
@@ -282,6 +290,123 @@ export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
 - **Cost Effective**: ~$0.0001-$0.0003 per query with gpt-4o-mini
 
 For detailed documentation, see [aiIntegr/README.md](aiIntegr/README.md).
+
+## MCP Server (Model Context Protocol)
+
+The unified shell includes an MCP server that enables AI agents and external tools to interact with the shell programmatically via a structured JSON-RPC protocol.
+
+### Quick Start with MCP
+
+**1. Start the shell with MCP enabled:**
+```bash
+# Enable MCP server on default port (9000)
+USHELL_MCP_ENABLED=1 ./ushell
+
+# Or with custom port and audit logging
+USHELL_MCP_ENABLED=1 USHELL_MCP_PORT=9001 \
+  USHELL_MCP_AUDIT_LOG=/var/log/ushell_audit.log ./ushell
+```
+
+**2. Test with a simple client:**
+```bash
+# In another terminal, test connection
+echo '{"id":"1","method":"initialize","params":{}}' | nc localhost 9000
+
+# Or use the example Python client
+cd examples
+python3 mcp_client_example.py
+```
+
+**3. Try the AI agent example:**
+```bash
+# Run the mock AI agent
+python3 examples/mcp_ai_agent_example.py "Find all Python files"
+python3 examples/mcp_ai_agent_example.py "What's in my home directory?"
+```
+
+### Key Features
+
+- **50+ Tools**: All built-in commands and utilities exposed as MCP tools
+- **Special AI Tools**: 
+  - `get_shell_context` - Get current shell state (cwd, user, history, env)
+  - `search_commands` - Search for commands by keyword
+  - `suggest_command` - Translate natural language to shell commands
+- **Secure Execution**: Multi-layer security (blacklist, sanitization, resource limits)
+- **Real-time Notifications**: Tool execution progress updates
+- **Concurrent Operations**: Support for multiple simultaneous tool calls
+- **Audit Logging**: Complete execution history for compliance
+
+### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `USHELL_MCP_ENABLED` | `0` | Enable MCP server (`1` = enabled) |
+| `USHELL_MCP_PORT` | `9000` | TCP port for MCP server |
+| `USHELL_MCP_AUDIT_LOG` | (none) | Path to audit log file |
+| `USHELL_MCP_MAX_CLIENTS` | `5` | Maximum concurrent clients |
+| `USHELL_MCP_TIMEOUT` | `30` | Client timeout in seconds |
+
+### Protocol Example
+
+```json
+// Initialize session
+{"id": "1", "method": "initialize", "params": {}}
+
+// List available tools
+{"id": "2", "method": "list_tools", "params": {}}
+
+// Execute a tool
+{"id": "3", "method": "call_tool", "params": {
+  "tool": "ls",
+  "args": {"path": "/home/user"}
+}}
+
+// Get shell context (special AI tool)
+{"id": "4", "method": "call_tool", "params": {
+  "tool": "get_shell_context",
+  "args": {}
+}}
+```
+
+### Security
+
+The MCP server includes comprehensive security measures:
+
+- **Command Blacklist**: Blocks dangerous commands (sudo, rm, chmod, etc.)
+- **Input Sanitization**: Prevents command injection via metacharacter filtering
+- **Path Validation**: Blocks directory traversal and system file access
+- **Resource Limits**: CPU time (30s), memory (256MB), processes (10), file size (10MB)
+- **Audit Logging**: JSON-formatted execution logs for monitoring
+
+### Troubleshooting
+
+**Connection Refused:**
+```bash
+# Ensure MCP is enabled
+USHELL_MCP_ENABLED=1 ./ushell
+
+# Check if port is in use
+lsof -i :9000
+
+# Try a different port
+USHELL_MCP_PORT=9001 USHELL_MCP_ENABLED=1 ./ushell
+```
+
+**Command Blacklisted:**
+```bash
+# Use safe alternatives instead
+# Instead of 'rm', use 'myrm'
+# Instead of 'chmod', modify via tool interface
+```
+
+**Permission Denied:**
+```bash
+# Run as non-root user (recommended)
+# Set proper file permissions
+chmod +x ushell
+```
+
+For comprehensive documentation, see [docs/MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md).
 
 ## Job Control
 

@@ -336,6 +336,7 @@ Congratulations! You've completed the ushell tutorial!
 - Read the User Guide: docs/USER_GUIDE.md
 - Try the example scripts: ./ushell < examples/example_scripts.sh
 - Explore advanced examples: examples/advanced_examples.sh
+- Try the MCP integration tutorial (see below)
 - Build your own shell scripts!
 
 ### Exit the shell:
@@ -343,3 +344,225 @@ Type: exit
 or press: Ctrl+D
 
 Thank you for using Unified Shell!
+
+================================================================================
+
+================================================================================
+  MCP INTEGRATION TUTORIAL (MODEL CONTEXT PROTOCOL)
+================================================================================
+
+The unified shell includes an MCP server for AI agent interaction. This section
+walks you through using the MCP protocol to control the shell programmatically.
+
+================================================================================
+  PART 13: MCP SERVER BASICS
+================================================================================
+
+### Step 55: Start Shell with MCP Enabled
+
+In a new terminal session:
+Type: USHELL_MCP_ENABLED=1 ./ushell
+
+The MCP server runs on port 9000 by default.
+
+TIP: Verify the server is running in another terminal:
+Type: lsof -i :9000
+
+
+### Step 56: Test Basic Connectivity
+
+In a separate terminal:
+Type: echo '{"id":"1","method":"initialize","params":{}}' | nc localhost 9000
+
+You should receive:
+{"id":"1","type":"response","result":{"server":"unified-shell-mcp","version":"1.0"}}
+
+
+================================================================================
+  PART 14: MCP PROTOCOL OPERATIONS
+================================================================================
+
+### Step 57: Discover Available Tools
+Type: echo '{"id":"2","method":"list_tools","params":{}}' | nc localhost 9000
+
+This returns a JSON list of 50+ available tools.
+
+### Step 58: Execute a Simple Tool
+Type: echo '{"id":"3","method":"call_tool","params":{"tool":"pwd","args":{}}}' | nc localhost 9000
+
+The server executes pwd and returns the output.
+
+### Step 59: Execute Tool with Arguments
+Type: echo '{"id":"4","method":"call_tool","params":{"tool":"echo","args":{"text":"Hello MCP!"}}}' | nc localhost 9000
+
+The server executes echo with your text.
+
+
+================================================================================
+  PART 15: SPECIAL AI TOOLS
+================================================================================
+
+### Step 60: Get Shell Context
+Type: echo '{"id":"5","method":"call_tool","params":{"tool":"get_shell_context","args":{}}}' | nc localhost 9000
+
+Returns: Current directory, user, command history, and environment variables.
+
+### Step 61: Search for Commands
+Type: echo '{"id":"6","method":"call_tool","params":{"tool":"search_commands","args":{"query":"list files"}}}' | nc localhost 9000
+
+Returns: Relevant commands with relevance scores.
+
+### Step 62: Get Command Suggestions
+Type: echo '{"id":"7","method":"call_tool","params":{"tool":"suggest_command","args":{"query":"find Python files"}}}' | nc localhost 9000
+
+Returns: A suggested shell command for your natural language query.
+
+
+================================================================================
+  PART 16: PYTHON CLIENT EXAMPLES
+================================================================================
+
+### Step 63: Run Basic Python Client
+
+Change to examples directory:
+Type: cd examples
+
+Run the client:
+Type: python3 mcp_client_example.py
+
+This demonstrates:
+- Connection and initialization
+- Tool discovery and listing
+- Command execution (pwd, echo)
+- Shell context retrieval
+- Command search
+- Natural language suggestions
+
+### Step 64: Run AI Agent Example
+
+Type: python3 mcp_ai_agent_example.py "Find all text files"
+
+The AI agent will:
+1. Connect to MCP server
+2. Analyze your query
+3. Select the appropriate tool
+4. Execute the tool
+5. Display results
+
+Try other queries:
+- python3 mcp_ai_agent_example.py "What's in my home directory?"
+- python3 mcp_ai_agent_example.py "Show current directory"
+
+
+================================================================================
+  PART 17: SECURITY FEATURES
+================================================================================
+
+### Step 65: Test Command Blacklist
+
+Type: echo '{"id":"8","method":"call_tool","params":{"tool":"sudo","args":{}}}' | nc localhost 9000
+
+Should return error: "Command 'sudo' is blacklisted for security reasons"
+
+Blacklisted commands: sudo, su, rm, chmod, chown, kill, reboot, shutdown
+
+### Step 66: Test Path Traversal Protection
+
+Type: echo '{"id":"9","method":"call_tool","params":{"tool":"mycat","args":{"file":"../../etc/passwd"}}}' | nc localhost 9000
+
+Should return error: "Path contains dangerous pattern: .."
+
+The server blocks directory traversal attempts.
+
+
+================================================================================
+  PART 18: ADVANCED MCP FEATURES
+================================================================================
+
+### Step 67: Enable Audit Logging
+
+Restart shell with audit logging:
+Type: USHELL_MCP_ENABLED=1 USHELL_MCP_AUDIT_LOG=/tmp/mcp_audit.log ./ushell
+
+Execute some commands via MCP, then check the log:
+Type: cat /tmp/mcp_audit.log
+
+You'll see JSON log entries for each command execution.
+
+### Step 68: Use Custom Port
+
+Type: USHELL_MCP_ENABLED=1 USHELL_MCP_PORT=9001 ./ushell
+
+Connect to the custom port:
+Type: echo '{"id":"1","method":"initialize","params":{}}' | nc localhost 9001
+
+
+================================================================================
+  PART 19: AUTOMATED TESTING
+================================================================================
+
+### Step 69: Run MCP Test Suite
+
+Change to tests directory:
+Type: cd tests
+
+Run all tests:
+Type: ./test_mcp_server.sh
+
+This runs comprehensive tests:
+- Basic functionality (connection, initialize, tools)
+- Special AI tools
+- Security (blacklist, injection, path traversal)
+- Error handling
+- Concurrent execution
+
+### Step 70: Run Specific Test Category
+
+Type: ./test_mcp_server.sh security
+
+Or test other categories:
+- ./test_mcp_server.sh basic
+- ./test_mcp_server.sh special
+- ./test_mcp_server.sh error
+- ./test_mcp_server.sh concurrent
+
+
+================================================================================
+  MCP INTEGRATION SCENARIOS
+================================================================================
+
+Now that you understand MCP, consider these integration ideas:
+
+1. **AI Shell Assistant** - Build an agent that translates natural language 
+   to shell commands and executes them via MCP.
+
+2. **Remote Shell Management** - Create a web dashboard that connects to 
+   MCP and provides a graphical interface for shell operations.
+
+3. **Automated Monitoring** - Write scripts that periodically call 
+   get_shell_context and system tools to monitor the environment.
+
+4. **CI/CD Integration** - Use MCP in your continuous integration pipeline 
+   to execute build and test commands with full tracking.
+
+For comprehensive MCP documentation, see: docs/MCP_INTEGRATION.md
+
+================================================================================
+  TUTORIAL COMPLETE!
+================================================================================
+
+Congratulations! You've completed both the basic shell tutorial and the 
+MCP integration tutorial. You now know how to:
+
+✓ Use all shell commands and features
+✓ Enable and configure the MCP server
+✓ Use the JSON-RPC protocol for shell interaction
+✓ Execute tools programmatically
+✓ Leverage special AI tools for intelligent assistance
+✓ Build Python clients and AI agents
+✓ Test security features
+✓ Run automated tests
+
+Thank you for using Unified Shell!
+
+

@@ -41,6 +41,8 @@
 #include "jobs.h"
 #include "signals.h"
 #include "threading.h"
+#include "mcp_server.h"
+#include "mcp_exec.h"
 
 /**
  * Global environment - stores shell variables and their values
@@ -56,6 +58,13 @@ Env *shell_env = NULL;
 ThreadPool *g_thread_pool = NULL;
 
 /**
+ * Global MCP server - enables external AI agents to connect
+ * Initialized if USHELL_MCP_ENABLED=1 is set
+ * NULL if MCP server is disabled
+ */
+MCPServerConfig *g_mcp_server = NULL;
+
+/**
  * cleanup_shell - Cleanup function called on exit
  * Frees all global resources to prevent memory leaks
  */
@@ -63,6 +72,15 @@ void cleanup_shell(void) {
     // Save history before exiting
     history_save(HISTORY_FILE);
     history_free();
+    
+    // Close audit log if it was initialized
+    mcp_exec_close_audit_log();
+    
+    // Stop and destroy MCP server if it was created
+    if (g_mcp_server != NULL) {
+        mcp_server_destroy(g_mcp_server);
+        g_mcp_server = NULL;
+    }
     
     // Destroy thread pool if it was created
     if (g_thread_pool != NULL) {
@@ -98,14 +116,14 @@ void cleanup_shell(void) {
  *    "env":{"PATH":"/usr/bin","HOME":"/home/user"}}
  */
 char* get_shell_state_json(void) {
-    // Allocate buffer for JSON output
-    char *json = malloc(MAX_LINE * 4);  // Large buffer for JSON
+    // Allocate buffer for JSON output (increased for large environments)
+    char *json = malloc(MAX_LINE * 16);  // 16KB buffer for JSON (handles large env vars)
     if (!json) {
         return NULL;
     }
     
     char *pos = json;
-    int remaining = MAX_LINE * 4;
+    int remaining = MAX_LINE * 16;
     
     // Start JSON object
     int written = snprintf(pos, remaining, "{");
@@ -720,6 +738,41 @@ int main(int argc, char **argv) {
             fprintf(stderr, "[Threading enabled: %d worker threads]\n", pool_size);
         } else {
             fprintf(stderr, "[Warning: Failed to create thread pool, threading disabled]\n");
+        }
+    }
+    
+    // Initialize MCP server if enabled
+    // Check environment variable USHELL_MCP_ENABLED and USHELL_MCP_PORT
+    char *mcp_enabled = getenv("USHELL_MCP_ENABLED");
+    if (mcp_enabled != NULL && strcmp(mcp_enabled, "1") == 0) {
+        // Initialize audit log if USHELL_MCP_AUDIT_LOG is set
+        char *audit_log_path = getenv("USHELL_MCP_AUDIT_LOG");
+        if (audit_log_path != NULL) {
+            mcp_exec_init_audit_log(audit_log_path);
+        }
+        
+        // Get MCP port from environment, default to 9000
+        int mcp_port = MCP_DEFAULT_PORT;
+        char *mcp_port_str = getenv("USHELL_MCP_PORT");
+        if (mcp_port_str != NULL) {
+            int parsed_port = atoi(mcp_port_str);
+            if (parsed_port > 0 && parsed_port <= 65535) {
+                mcp_port = parsed_port;
+            }
+        }
+        
+        // Create and start MCP server
+        g_mcp_server = mcp_server_create(mcp_port, shell_env);
+        if (g_mcp_server != NULL) {
+            if (mcp_server_start(g_mcp_server) == 0) {
+                fprintf(stderr, "[MCP server enabled on port %d]\n", mcp_port);
+            } else {
+                fprintf(stderr, "[Warning: Failed to start MCP server]\n");
+                mcp_server_destroy(g_mcp_server);
+                g_mcp_server = NULL;
+            }
+        } else {
+            fprintf(stderr, "[Warning: Failed to create MCP server configuration]\n");
         }
     }
     

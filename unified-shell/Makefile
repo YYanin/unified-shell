@@ -54,6 +54,10 @@ SRCS = src/main.c \
        src/jobs/signals.c \
        src/threading/threading.c \
        src/help/help.c \
+       src/mcp_server/mcp_server.c \
+       src/mcp_server/mcp_json.c \
+       src/mcp_server/mcp_tools.c \
+       src/mcp_server/mcp_exec.c \
        src/argtable3/arg_cmd.c \
        src/argtable3/arg_date.c \
        src/argtable3/arg_dbl.c \
