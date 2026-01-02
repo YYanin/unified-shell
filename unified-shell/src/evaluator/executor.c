@@ -73,6 +73,9 @@ int execute_command(char **argv, Env *env) {
         // If execvp returns, it failed - provide detailed error
         if (errno == ENOENT) {
             fprintf(stderr, "ushell: command not found: %s\n", argv[0]);
+            // TODO: Implement heuristic command suggestion in pure C
+            // Could use Levenshtein distance to suggest similar commands
+            // Example: "pdw" -> "Did you mean: pwd?"
         } else if (errno == EACCES) {
             fprintf(stderr, "ushell: permission denied: %s\n", argv[0]);
         } else {
@@ -566,6 +569,7 @@ int execute_pipeline(Command *commands, int count, Env *env) {
             // Execute external command
             execvp(commands[i].argv[0], commands[i].argv);
             fprintf(stderr, "ushell: command not found: %s\n", commands[i].argv[0]);
+            // TODO: Implement heuristic command suggestion in pure C
             exit(127);
         }
     }

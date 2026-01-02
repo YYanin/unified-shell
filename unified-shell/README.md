@@ -88,16 +88,16 @@ Built from the ground up using C, ushell demonstrates systems programming concep
 
 ### Integrated Tools (10)
 All tools accessible directly within the shell:
-- DONE `myls [dir]` - List directory contents
-- DONE `mycat file...` - Display file contents
-- DONE `mycp src dest` - Copy files
-- DONE `mymv src dest` - Move/rename files
-- DONE `myrm file...` - Remove files
-- DONE `mymkdir dir...` - Create directories
-- DONE `myrmdir dir...` - Remove empty directories
-- DONE `mytouch file...` - Create/update files
-- DONE `mystat file...` - Display file status
-- DONE `myfd pattern [dir]` - Find files by pattern
+- DONE `ls [dir]` - List directory contents
+- DONE `cat file...` - Display file contents
+- DONE `cp src dest` - Copy files
+- DONE `mv src dest` - Move/rename files
+- DONE `rm file...` - Remove files
+- DONE `mkdir dir...` - Create directories
+- DONE `rmdir dir...` - Remove empty directories
+- DONE `touch file...` - Create/update files
+- DONE `stat file...` - Display file status
+- DONE `find pattern [dir]` - Find files by pattern
 
 ## Quick Start
 
@@ -196,7 +196,7 @@ echo Hello $NAME
 echo The answer is: $((6 * 7))
 
 # Use a pipeline
-myls | myfd .c
+ls | find .c
 
 # Change directory and check prompt
 cd /tmp
@@ -205,83 +205,6 @@ pwd
 # Exit the shell
 exit
 ```
-
-## AI Integration
-
-The unified shell includes AI-powered command suggestions using natural language queries.
-
-### Quick Start with AI
-
-```bash
-# Ask the AI for command suggestions using @ prefix
-@list all python files
-
-# The AI suggests a command
-AI Suggestion: find . -name "*.py"
-
-# Confirm to execute
-Execute this command? (y/n/e): y
-```
-
-**Confirmation Options:**
-- `y` - Execute the suggested command
-- `n` - Cancel, return to prompt  
-- `e` - Edit the suggestion before executing
-
-### Configuration
-
-**Heuristic Mode (Free, No Setup):**
-```bash
-# Set AI helper path
-export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
-
-# Start using @ queries immediately
-./ushell
-@list files
-```
-
-**OpenAI Mode (Intelligent, Requires API Key):**
-```bash
-# Get API key from https://platform.openai.com/api-keys
-export OPENAI_API_KEY="sk-your-api-key-here"
-export USHELL_LLM_MODEL="gpt-4o-mini"  # Optional, default model
-export USHELL_AI_HELPER=$PWD/aiIntegr/ushell_ai_venv.sh
-
-./ushell
-@find all files larger than 1MB modified in last week
-```
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key (optional) | None |
-| `USHELL_LLM_MODEL` | AI model to use | `gpt-4o-mini` |
-| `USHELL_AI_HELPER` | Path to AI helper script | `./aiIntegr/ushell_ai.py` |
-| `USHELL_AI_DEBUG` | Enable debug output | `0` |
-| `USHELL_AI_CONTEXT` | Share shell state with AI | `1` |
-
-### Example Queries
-
-```bash
-@list all c files in src directory
-@show files modified today
-@count lines in main.c
-@create a backup directory
-@find executable files
-@show disk usage
-```
-
-### Features
-
-- **Dual Mode**: Heuristic (free) or OpenAI-powered (intelligent)
-- **Safe by Default**: User confirmation required before execution
-- **Command Catalog**: AI knows all built-in and tool commands
-- **Context-Aware**: Optional shell state for better suggestions
-- **Privacy Controls**: Transparent data usage, opt-out available
-- **Cost Effective**: ~$0.0001-$0.0003 per query with gpt-4o-mini
-
-For detailed documentation, see [aiIntegr/README.md](aiIntegr/README.md).
 
 ## Job Control
 
@@ -458,7 +381,7 @@ sleep 2 &
 **Pipeline as Background Job:**
 ```bash
 # Run entire pipeline in background
-myls | myfd .c | mycat &
+ls | find .c | cat &
 [1] 12345
 ```
 
@@ -722,18 +645,18 @@ echo X=$X, Y=$Y
 echo Result: $((X + Y))
 
 # Test conditionals
-if myls /tmp then echo Found /tmp fi
+if ls /tmp then echo Found /tmp fi
 
 # Test pipelines
-myls | myfd .c | mycat
+ls | find .c | cat
 
 # Test glob expansion
 echo *.c
-myls test*.txt
+ls test*.txt
 
 # Test I/O redirection
 echo "test data" > output.txt
-mycat < output.txt
+cat < output.txt
 echo "more data" >> output.txt
 ```
 

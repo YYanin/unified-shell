@@ -34,16 +34,16 @@ SRCS = src/main.c \
        src/parser/Printer.c \
        src/parser/Skeleton.c \
        src/tools/tool_dispatch.c \
-       src/tools/myls.c \
-       src/tools/mycat.c \
-       src/tools/mycp.c \
-       src/tools/mymv.c \
-       src/tools/myrm.c \
-       src/tools/mymkdir.c \
-       src/tools/myrmdir.c \
-       src/tools/mytouch.c \
-       src/tools/mystat.c \
-       src/tools/myfd.c \
+       src/tools/ls.c \
+       src/tools/cat.c \
+       src/tools/cp.c \
+       src/tools/mv.c \
+       src/tools/rm.c \
+       src/tools/mkdir.c \
+       src/tools/rmdir.c \
+       src/tools/touch.c \
+       src/tools/stat.c \
+       src/tools/find.c \
        src/glob/glob.c \
        src/apt/repo.c \
        src/apt/apt_builtin.c \

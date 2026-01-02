@@ -1,5 +1,5 @@
 /**
- * @file myfd.c
+ * @file find.c
  * @brief A parallel file search utility, similar to 'fd' or 'find'.
  *
  * This program searches for filesystem entries recursively. It supports
@@ -8,10 +8,10 @@
  * improve performance on large filesystems.
  *
  * Compilation:
- * gcc myfd.c -o myfd -pthread
+ * gcc find.c -o find -pthread
  *
  * Example Usage:
- * ./myfd --hidden -e rs -t f "^test_" /home/user/projects
+ * ./find --hidden -e rs -t f "^test_" /home/user/projects
  */
 
 #include <stdio.h>
@@ -69,16 +69,16 @@ typedef struct {
 // --- Forward Declarations ---
 void *worker_thread(void *arg);
 void process_directory(const char *dir_path, const SearchConfig *config);
-Gitignore myfd_load_gitignore(const char *dir_path);
-void myfd_free_gitignore(Gitignore *gi);
-bool myfd_is_ignored(const char *path, const Gitignore *gi);
+Gitignore find_load_gitignore(const char *dir_path);
+void find_free_gitignore(Gitignore *gi);
+bool find_is_ignored(const char *path, const Gitignore *gi);
 void queue_init(WorkQueue *q);
 void queue_push(WorkQueue *q, const char *path);
 char* queue_pop(WorkQueue *q);
 void queue_destroy(WorkQueue *q);
 
 // --- Main Function ---
-int tool_myfd_main(int argc, char **argv) {
+int tool_find_main(int argc, char **argv) {
     SearchConfig config = { .pattern = "*", .extension = NULL, .type_filter = 0, .show_hidden = false, .match_full_path = false };
     char *start_path = ".";
     char *pattern_arg = NULL;
@@ -94,19 +94,19 @@ int tool_myfd_main(int argc, char **argv) {
         } else if (strcmp(argv[i], "-t") == 0 && i + 1 < argc) {
             config.type_filter = argv[++i][0];
             if (config.type_filter != 'f' && config.type_filter != 'd') {
-                fprintf(stderr, "myfd: invalid type '%c'. Use 'f' or 'd'.\n", config.type_filter);
+                fprintf(stderr, "find: invalid type '%c'. Use 'f' or 'd'.\n", config.type_filter);
                 return 1;
             }
         } else if (strcmp(argv[i], "--full-path") == 0) {
             config.match_full_path = true;
         } else if (argv[i][0] == '-') {
-            fprintf(stderr, "myfd: unknown option '%s'\n", argv[i]);
+            fprintf(stderr, "find: unknown option '%s'\n", argv[i]);
             return 1;
         } else {
             if (path_args == 0) pattern_arg = argv[i];
             else if (path_args == 1) start_path = argv[i];
             else {
-                fprintf(stderr, "myfd: too many path arguments\n");
+                fprintf(stderr, "find: too many path arguments\n");
                 return 1;
             }
             path_args++;
@@ -142,7 +142,7 @@ int tool_myfd_main(int argc, char **argv) {
         // Allocate enough space for "*pattern*" + null terminator
         allocated_pattern = malloc(strlen(config.pattern) + 3);
         if (allocated_pattern == NULL) {
-            perror("myfd: malloc");
+            perror("find: malloc");
             return 1;
         }
         sprintf(allocated_pattern, "*%s*", config.pattern);
@@ -160,7 +160,7 @@ int tool_myfd_main(int argc, char **argv) {
     // Create worker threads
     for (int i = 0; i < num_threads; i++) {
         if (pthread_create(&threads[i], NULL, worker_thread, &config) != 0) {
-            perror("myfd: pthread_create");
+            perror("find: pthread_create");
             free(allocated_pattern); // Clean up on error
             return 1;
         }
@@ -169,7 +169,7 @@ int tool_myfd_main(int argc, char **argv) {
     // --- Start Search ---
     char initial_path[PATH_MAX];
     if (realpath(start_path, initial_path) == NULL) {
-        fprintf(stderr, "myfd: invalid start path '%s': %s\n", start_path, strerror(errno));
+        fprintf(stderr, "find: invalid start path '%s': %s\n", start_path, strerror(errno));
         free(allocated_pattern); // Clean up on error
         return 1;
     }
@@ -237,13 +237,13 @@ void process_directory(const char *dir_path, const SearchConfig *config) {
     DIR *dir = opendir(dir_path);
     if (!dir) {
         pthread_mutex_lock(&g_print_mutex);
-        fprintf(stderr, "myfd: cannot read directory '%s': %s\n", dir_path, strerror(errno));
+        fprintf(stderr, "find: cannot read directory '%s': %s\n", dir_path, strerror(errno));
         pthread_mutex_unlock(&g_print_mutex);
         g_error_occurred = true;
         return;
     }
 
-    Gitignore gi = myfd_load_gitignore(dir_path);
+    Gitignore gi = find_load_gitignore(dir_path);
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL) {
@@ -256,7 +256,7 @@ void process_directory(const char *dir_path, const SearchConfig *config) {
             continue;
         }
 
-        if (myfd_is_ignored(entry->d_name, &gi)) {
+        if (find_is_ignored(entry->d_name, &gi)) {
             continue;
         }
 
@@ -295,7 +295,7 @@ void process_directory(const char *dir_path, const SearchConfig *config) {
         }
     }
 
-    myfd_free_gitignore(&gi);
+    find_free_gitignore(&gi);
     closedir(dir);
 }
 
@@ -356,7 +356,7 @@ void queue_destroy(WorkQueue *q) {
     pthread_cond_destroy(&q->can_pop);
 }
 
-Gitignore myfd_load_gitignore(const char *dir_path) {
+Gitignore find_load_gitignore(const char *dir_path) {
     Gitignore gi = { .count = 0 };
     char gitignore_path[PATH_MAX];
     snprintf(gitignore_path, sizeof(gitignore_path), "%s/.gitignore", dir_path);
@@ -379,14 +379,14 @@ Gitignore myfd_load_gitignore(const char *dir_path) {
     return gi;
 }
 
-void myfd_free_gitignore(Gitignore *gi) {
+void find_free_gitignore(Gitignore *gi) {
     for (int i = 0; i < gi->count; i++) {
         free(gi->patterns[i]);
     }
     gi->count = 0;
 }
 
-bool myfd_is_ignored(const char *path, const Gitignore *gi) {
+bool find_is_ignored(const char *path, const Gitignore *gi) {
     for (int i = 0; i < gi->count; i++) {
         // fnmatch should be used with FNM_PATHNAME for gitignore-style matching
         if (fnmatch(gi->patterns[i], path, FNM_PATHNAME) == 0) {
@@ -402,10 +402,10 @@ bool myfd_is_ignored(const char *path, const Gitignore *gi) {
 
 ### How to Compile and Run
 
-1.  **Save the Code:** Save the content above into a file named `myfd.c`.
+1.  **Save the Code:** Save the content above into a file named `find.c`.
 2.  **Compile:** Open your terminal and compile the program using GCC. The `-pthread` flag is **essential** to link the POSIX threads library.
     ```sh
-    gcc myfd.c -o myfd -pthread
+    gcc find.c -o find -pthread
     ```
 3.  **Run:** You can now execute the program.
 
@@ -424,7 +424,7 @@ bool myfd_is_ignored(const char *path, const Gitignore *gi) {
 
     * **Find all entries (ignores hidden, respects .gitignore):**
         ```sh
-        ./myfd "" my_project
+        ./find "" my_project
         # Output might include:
         # my_project/src
         # my_project/src/main.rs
@@ -436,13 +436,13 @@ bool myfd_is_ignored(const char *path, const Gitignore *gi) {
 
     * **Find all entries, including hidden ones:**
         ```sh
-        ./myfd --hidden "" my_project
+        ./find --hidden "" my_project
         # Output will now include my_project/.DS_Store
         ```
 
     * **Find only files (`-t f`) with the `.rs` extension (`-e rs`):**
         ```sh
-        ./myfd -t f -e rs "" my_project
+        ./find -t f -e rs "" my_project
         # Output:
         # my_project/src/main.rs
         # my_project/src/lib.rs
@@ -451,7 +451,7 @@ bool myfd_is_ignored(const char *path, const Gitignore *gi) {
 
     * **Find files starting with "test" using a glob pattern:**
         ```sh
-        ./myfd "test*" my_project
+        ./find "test*" my_project
         # Output:
         # my_project/tests/test_main.rs
         

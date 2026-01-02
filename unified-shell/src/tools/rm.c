@@ -1,26 +1,26 @@
 /**
- * @file myrm.c
+ * @file rm.c
  * @brief A simple implementation of the 'rm' command in C.
  *
  * This program removes files or directories. It supports interactive mode (-i)
  * to confirm removals and recursive mode (-r) to remove directories.
  *
  * Compilation:
- * gcc myrm.c -o myrm
+ * gcc rm.c -o rm
  *
  * Example Usages:
  *
  * # Remove a file
- * ./myrm file1.txt
+ * ./rm file1.txt
  *
  * # Interactively remove a file
- * ./myrm -i file_to_delete.log
+ * ./rm -i file_to_delete.log
  *
  * # Recursively remove a directory and its contents
- * ./myrm -r old_project/
+ * ./rm -r old_project/
  *
  * # Interactively and recursively remove a directory
- * ./myrm -ri sensitive_data/
+ * ./rm -ri sensitive_data/
  */
 
 #include <stdio.h>
@@ -40,7 +40,7 @@ void remove_directory_recursively(const char *path, bool interactive);
 bool get_confirmation(const char *prompt_type, const char *path);
 
 // --- Main Function ---
-int tool_myrm_main(int argc, char **argv) {
+int tool_rm_main(int argc, char **argv) {
     bool interactive = false;
     bool recursive = false;
     char *paths[argc];
@@ -48,7 +48,7 @@ int tool_myrm_main(int argc, char **argv) {
 
     // --- Argument Parsing ---
     if (argc < 2) {
-        fprintf(stderr, "myrm: missing operand\n");
+        fprintf(stderr, "rm: missing operand\n");
         return 1;
     }
     
@@ -62,7 +62,7 @@ int tool_myrm_main(int argc, char **argv) {
                 } else if (argv[i][j] == 'r') {
                     recursive = true;
                 } else {
-                    fprintf(stderr, "myrm: invalid option -- '%c'\n", argv[i][j]);
+                    fprintf(stderr, "rm: invalid option -- '%c'\n", argv[i][j]);
                     return 1;
                 }
             }
@@ -73,7 +73,7 @@ int tool_myrm_main(int argc, char **argv) {
     }
 
     if (path_count == 0) {
-        fprintf(stderr, "myrm: missing operand\n");
+        fprintf(stderr, "rm: missing operand\n");
         return 1;
     }
     
@@ -97,14 +97,14 @@ void remove_entry(const char *path, bool interactive, bool recursive) {
     struct stat path_stat;
     // Use lstat to get info without following symbolic links
     if (lstat(path, &path_stat) != 0) {
-        fprintf(stderr, "myrm: cannot remove '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "rm: cannot remove '%s': %s\n", path, strerror(errno));
         return;
     }
 
     // Check if it's a directory
     if (S_ISDIR(path_stat.st_mode)) {
         if (!recursive) {
-            fprintf(stderr, "myrm: cannot remove '%s': Is a directory\n", path);
+            fprintf(stderr, "rm: cannot remove '%s': Is a directory\n", path);
             return;
         }
         remove_directory_recursively(path, interactive);
@@ -117,7 +117,7 @@ void remove_entry(const char *path, bool interactive, bool recursive) {
         }
         
         if (unlink(path) != 0) {
-            fprintf(stderr, "myrm: cannot remove '%s': %s\n", path, strerror(errno));
+            fprintf(stderr, "rm: cannot remove '%s': %s\n", path, strerror(errno));
         }
     }
 }
@@ -130,7 +130,7 @@ void remove_entry(const char *path, bool interactive, bool recursive) {
 void remove_directory_recursively(const char *path, bool interactive) {
     DIR *dir = opendir(path);
     if (!dir) {
-        fprintf(stderr, "myrm: cannot open directory '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "rm: cannot open directory '%s': %s\n", path, strerror(errno));
         return;
     }
 
@@ -157,7 +157,7 @@ void remove_directory_recursively(const char *path, bool interactive) {
     }
 
     if (rmdir(path) != 0) {
-        fprintf(stderr, "myrm: cannot remove directory '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "rm: cannot remove directory '%s': %s\n", path, strerror(errno));
     }
 }
 
@@ -168,7 +168,7 @@ void remove_directory_recursively(const char *path, bool interactive) {
  * @return true if the user confirms, false otherwise.
  */
 bool get_confirmation(const char *prompt_type, const char *path) {
-    printf("myrm: remove %s '%s'? ", prompt_type, path);
+    printf("rm: remove %s '%s'? ", prompt_type, path);
     fflush(stdout); // Ensure the prompt is shown
 
     int c = getchar();

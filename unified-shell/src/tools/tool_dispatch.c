@@ -25,23 +25,23 @@ typedef struct {
  * without spawning external processes.
  */
 static ToolEntry tool_table[] = {
-    {"myls", tool_myls_main},
-    {"mycat", tool_mycat_main},
-    {"mycp", tool_mycp_main},
-    {"mymv", tool_mymv_main},
-    {"myrm", tool_myrm_main},
-    {"mymkdir", tool_mymkdir_main},
-    {"myrmdir", tool_myrmdir_main},
-    {"mytouch", tool_mytouch_main},
-    {"mystat", tool_mystat_main},
-    {"myfd", tool_myfd_main},
+    {"ls", tool_ls_main},
+    {"cat", tool_cat_main},
+    {"cp", tool_cp_main},
+    {"mv", tool_mv_main},
+    {"rm", tool_rm_main},
+    {"mkdir", tool_mkdir_main},
+    {"rmdir", tool_rmdir_main},
+    {"touch", tool_touch_main},
+    {"stat", tool_stat_main},
+    {"find", tool_find_main},
     {NULL, NULL}  // Sentinel to mark end of table
 };
 
 /**
  * @brief Find a tool function by name
  * 
- * @param name The name of the tool to find (e.g., "myls")
+ * @param name The name of the tool to find (e.g., "ls")
  * @return The tool function pointer if found, NULL otherwise
  */
 tool_func find_tool(const char *name) {

@@ -1,5 +1,5 @@
 /**
- * @file mycp.c
+ * @file cp.c
  * @brief A simple implementation of the 'cp' command in C.
  *
  * This program copies files or directories with support for recursive directory
@@ -7,14 +7,14 @@
  * It also supports glob patterns for source files.
  *
  * Compilation:
- * gcc mycp.c -o mycp
+ * gcc cp.c -o cp
  *
  * Example Usages:
- * ./mycp file1.txt /path/to/destination/
- * ./mycp -i file1.txt file2.txt # prompts before overwriting file2.txt
- * ./mycp -r src_dir/ dest_dir/
- * ./mycp -ir src_dir/ dest_dir/
- * ./mycp "*.txt" dest_dir/ # copies all .txt files to dest_dir
+ * ./cp file1.txt /path/to/destination/
+ * ./cp -i file1.txt file2.txt # prompts before overwriting file2.txt
+ * ./cp -r src_dir/ dest_dir/
+ * ./cp -ir src_dir/ dest_dir/
+ * ./cp "*.txt" dest_dir/ # copies all .txt files to dest_dir
  */
 
 #include <stdio.h>
@@ -38,7 +38,7 @@ void copy_file(const char *source, const char *dest, bool interactive);
 void copy_directory(const char *source, const char *dest, bool interactive, bool recursive);
 
 // --- Main Function ---
-int tool_mycp_main(int argc, char **argv) {
+int tool_cp_main(int argc, char **argv) {
     bool recursive = false;
     bool interactive = false;
     int opt;
@@ -61,7 +61,7 @@ int tool_mycp_main(int argc, char **argv) {
                     } else if (argv[i][j] == 'i') {
                         interactive = true;
                     } else {
-                        fprintf(stderr, "mycp: invalid option -- '%c'\n", argv[i][j]);
+                        fprintf(stderr, "cp: invalid option -- '%c'\n", argv[i][j]);
                         return 1;
                     }
                 }
@@ -74,7 +74,7 @@ int tool_mycp_main(int argc, char **argv) {
     }
 
     if (source_count < 2) {
-        fprintf(stderr, "mycp: missing destination file operand\n");
+        fprintf(stderr, "cp: missing destination file operand\n");
         return 1;
     }
 
@@ -86,7 +86,7 @@ int tool_mycp_main(int argc, char **argv) {
     if (source_count > 1) {
         struct stat dest_stat;
         if (stat(destination, &dest_stat) != 0 || !S_ISDIR(dest_stat.st_mode)) {
-            fprintf(stderr, "mycp: target '%s' is not a directory\n", destination);
+            fprintf(stderr, "cp: target '%s' is not a directory\n", destination);
             return 1;
         }
     }
@@ -111,20 +111,20 @@ int tool_mycp_main(int argc, char **argv) {
 void copy_entry(const char *source, const char *dest, bool interactive, bool recursive) {
     struct stat source_stat;
     if (lstat(source, &source_stat) != 0) {
-        perror("mycp: lstat");
+        perror("cp: lstat");
         return;
     }
 
     if (S_ISDIR(source_stat.st_mode)) {
         if (!recursive) {
-            fprintf(stderr, "mycp: -r not specified; omitting directory '%s'\n", source);
+            fprintf(stderr, "cp: -r not specified; omitting directory '%s'\n", source);
         } else {
             copy_directory(source, dest, interactive, recursive);
         }
     } else if (S_ISREG(source_stat.st_mode)) {
         copy_file(source, dest, interactive);
     } else {
-        fprintf(stderr, "mycp: cannot copy '%s': Not a regular file or directory\n", source);
+        fprintf(stderr, "cp: cannot copy '%s': Not a regular file or directory\n", source);
     }
 }
 
@@ -171,7 +171,7 @@ void copy_file(const char *source, const char *dest, bool interactive) {
     // Open source and destination files
     int fd_from = open(source, O_RDONLY);
     if (fd_from == -1) {
-        perror("mycp: open (source)");
+        perror("cp: open (source)");
         return;
     }
 
@@ -180,7 +180,7 @@ void copy_file(const char *source, const char *dest, bool interactive) {
 
     int fd_to = open(final_dest, O_WRONLY | O_CREAT | O_TRUNC, source_stat.st_mode);
     if (fd_to == -1) {
-        perror("mycp: open (destination)");
+        perror("cp: open (destination)");
         close(fd_from);
         return;
     }
@@ -190,13 +190,13 @@ void copy_file(const char *source, const char *dest, bool interactive) {
     ssize_t nread;
     while ((nread = read(fd_from, buffer, sizeof(buffer))) > 0) {
         if (write(fd_to, buffer, nread) != nread) {
-            perror("mycp: write");
+            perror("cp: write");
             break;
         }
     }
     
     if (nread == -1) {
-        perror("mycp: read");
+        perror("cp: read");
     }
 
     close(fd_from);
@@ -214,7 +214,7 @@ void copy_file(const char *source, const char *dest, bool interactive) {
 void copy_directory(const char *source, const char *dest, bool interactive, bool recursive) {
     DIR *d = opendir(source);
     if (!d) {
-        perror("mycp: opendir");
+        perror("cp: opendir");
         return;
     }
 
@@ -232,7 +232,7 @@ void copy_directory(const char *source, const char *dest, bool interactive, bool
     }
 
     if (mkdir(new_dest, source_stat.st_mode) != 0 && errno != EEXIST) {
-        perror("mycp: mkdir");
+        perror("cp: mkdir");
         closedir(d);
         return;
     }
@@ -248,7 +248,7 @@ void copy_directory(const char *source, const char *dest, bool interactive, bool
         
         // Check for potential path length overflow before creating full source path
         if (strlen(source) + strlen(entry->d_name) + 2 > sizeof(source_path)) {
-            fprintf(stderr, "mycp: source path is too long: %s/%s\n", source, entry->d_name);
+            fprintf(stderr, "cp: source path is too long: %s/%s\n", source, entry->d_name);
             continue;
         }
         snprintf(source_path, sizeof(source_path), "%s/%s", source, entry->d_name);
@@ -262,12 +262,12 @@ void copy_directory(const char *source, const char *dest, bool interactive, bool
 
 ### How to Compile and Run
 
-1.  **Save:** Save the code into a file named `mycp.c`.
+1.  **Save:** Save the code into a file named `cp.c`.
 2.  **Compile:** Use GCC to compile the program in your terminal.
     ```sh
-    gcc mycp.c -o mycp
+    gcc cp.c -o cp
     ```
-3.  **Run:** You can now use `mycp` similarly to the standard `cp` command.
+3.  **Run:** You can now use `cp` similarly to the standard `cp` command.
 
     **Setup for Examples:**
     ```sh
@@ -282,30 +282,30 @@ void copy_directory(const char *source, const char *dest, bool interactive, bool
     **Example Usages:**
     * **Copy a single file:**
         ```sh
-        ./mycp file_a.txt dest_dir/
+        ./cp file_a.txt dest_dir/
         ```
 
     * **Copy with interactive prompt (file exists):**
         ```sh
-        ./mycp file_a.txt dest_dir/existing_file.txt
+        ./cp file_a.txt dest_dir/existing_file.txt
         # You will be prompted: overwrite 'dest_dir/existing_file.txt'?
         # Press 'y' and Enter to confirm, or any other key to cancel.
         ```
 
     * **Copy a directory recursively:**
         ```sh
-        ./mycp -r src_dir dest_dir/
+        ./cp -r src_dir dest_dir/
         # This will create dest_dir/src_dir/ with all its contents.
         ```
 
     * **Use combined options:**
         ```sh
-        ./mycp -ir src_dir dest_dir/
+        ./cp -ir src_dir dest_dir/
         ```
 
     * **Copy files matching a pattern:**
         ```sh
-        ./mycp "src_dir/*.txt" dest_dir/
+        ./cp "src_dir/*.txt" dest_dir/
         # This copies src_dir/file1.txt to dest_dir/.
         # Note: Quoting the pattern is important so the shell doesn't expand it.
         

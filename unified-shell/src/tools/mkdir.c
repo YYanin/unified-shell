@@ -1,26 +1,26 @@
 /**
- * @file mymkdir.c
+ * @file mkdir.c
  * @brief A simple implementation of the 'mkdir' command in C.
  *
  * This program creates directories. It supports a -p option to create
  * parent directories as needed.
  *
  * Compilation:
- * gcc mymkdir.c -o mymkdir
+ * gcc mkdir.c -o mkdir
  *
  * Example Usages:
  *
  * # Create a single directory
- * ./mymkdir new_folder
+ * ./mkdir new_folder
  *
  * # Create multiple directories
- * ./mymkdir drafts assets
+ * ./mkdir drafts assets
  *
  * # Create nested directories (will fail without -p)
- * ./mymkdir project/src/components
+ * ./mkdir project/src/components
  *
  * # Create nested directories using the -p flag
- * ./mymkdir -p project/src/components
+ * ./mkdir -p project/src/components
  */
 
 #include <stdio.h>
@@ -39,13 +39,13 @@ void create_directory(const char *path, bool create_parents);
 int mkdir_p(const char *path);
 
 // --- Main Function ---
-int tool_mymkdir_main(int argc, char **argv) {
+int tool_mkdir_main(int argc, char **argv) {
     bool create_parents = false;
     char *paths[argc];
     int path_count = 0;
 
     if (argc < 2) {
-        fprintf(stderr, "mymkdir: missing operand\n");
+        fprintf(stderr, "mkdir: missing operand\n");
         return 1;
     }
 
@@ -55,7 +55,7 @@ int tool_mymkdir_main(int argc, char **argv) {
         if (strcmp(argv[i], "-p") == 0) {
             create_parents = true;
         } else if (argv[i][0] == '-') {
-            fprintf(stderr, "mymkdir: invalid option '%s'\n", argv[i]);
+            fprintf(stderr, "mkdir: invalid option '%s'\n", argv[i]);
             return 1;
         } else {
             paths[path_count++] = argv[i];
@@ -63,7 +63,7 @@ int tool_mymkdir_main(int argc, char **argv) {
     }
 
     if (path_count == 0) {
-        fprintf(stderr, "mymkdir: missing operand\n");
+        fprintf(stderr, "mkdir: missing operand\n");
         return 1;
     }
 
@@ -90,9 +90,9 @@ void create_directory(const char *path, bool create_parents) {
         if (mkdir(path, DEFAULT_MODE) != 0) {
             // Provide the specific error message when the file exists
             if (errno == EEXIST) {
-                fprintf(stderr, "mymkdir: cannot create directory '%s': File exists\n", path);
+                fprintf(stderr, "mkdir: cannot create directory '%s': File exists\n", path);
             } else {
-                fprintf(stderr, "mymkdir: cannot create directory '%s': %s\n", path, strerror(errno));
+                fprintf(stderr, "mkdir: cannot create directory '%s': %s\n", path, strerror(errno));
             }
         }
     }
@@ -126,7 +126,7 @@ int mkdir_p(const char *path) {
             if (mkdir(tmp_path, DEFAULT_MODE) != 0) {
                 // It's only an error if the directory doesn't already exist
                 if (errno != EEXIST) {
-                    fprintf(stderr, "mymkdir: cannot create directory '%s': %s\n", tmp_path, strerror(errno));
+                    fprintf(stderr, "mkdir: cannot create directory '%s': %s\n", tmp_path, strerror(errno));
                     return -1;
                 }
             }
@@ -137,7 +137,7 @@ int mkdir_p(const char *path) {
     // Create the final, full directory
     if (mkdir(tmp_path, DEFAULT_MODE) != 0) {
         if (errno != EEXIST) {
-            fprintf(stderr, "mymkdir: cannot create directory '%s': %s\n", tmp_path, strerror(errno));
+            fprintf(stderr, "mkdir: cannot create directory '%s': %s\n", tmp_path, strerror(errno));
             return -1;
         }
     }
@@ -147,10 +147,10 @@ int mkdir_p(const char *path) {
 /*
 ### How to Compile and Run
 
-1.  **Save the Code:** Save the content above into a file named `mymkdir.c`.
+1.  **Save the Code:** Save the content above into a file named `mkdir.c`.
 2.  **Compile:** Open your terminal and use GCC to compile the program:
     ```sh
-    gcc mymkdir.c -o mymkdir
+    gcc mkdir.c -o mkdir
     ```
 3.  **Run:** You can now use the program as described.
 
@@ -158,27 +158,27 @@ int mkdir_p(const char *path) {
 
     * **Create a single directory:**
         ```sh
-        ./mymkdir new_folder
+        ./mkdir new_folder
         ```
 
     * **Attempt to create an existing directory (will show an error):**
         ```sh
-        ./mymkdir new_folder
-        # Output: mymkdir: cannot create directory 'new_folder': File exists
+        ./mkdir new_folder
+        # Output: mkdir: cannot create directory 'new_folder': File exists
         ```
 
     * **Create multiple directories at once:**
         ```sh
-        ./mymkdir drafts assets
+        ./mkdir drafts assets
         ```
 
     * **Attempt to create a nested path without `-p` (will fail):**
         ```sh
-        ./mymkdir project/src
-        # Output: mymkdir: cannot create directory 'project/src': No such file or directory
+        ./mkdir project/src
+        # Output: mkdir: cannot create directory 'project/src': No such file or directory
         ```
 
     * **Successfully create a nested path with `-p`:**
         ```sh
-        ./mymkdir -p project/src/components
+        ./mkdir -p project/src/components
 */

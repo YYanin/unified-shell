@@ -340,81 +340,81 @@ test_globs() {
 test_builtin_tools() {
     print_header "TEST CATEGORY: BUILT-IN TOOLS"
     
-    print_test "myls command"
+    print_test "ls command"
     touch testfile1 testfile2
-    result=$(run_ushell "myls")
+    result=$(run_ushell "ls")
     if echo "$result" | grep -q "testfile1" && echo "$result" | grep -q "testfile2"; then
-        pass_test "myls lists files"
+        pass_test "ls lists files"
     else
-        fail_test "myls failed"
+        fail_test "ls failed"
     fi
     rm testfile1 testfile2
     
-    print_test "mycat command"
+    print_test "cat command"
     echo "cattest" > catfile.txt
-    result=$(run_ushell "mycat catfile.txt")
+    result=$(run_ushell "cat catfile.txt")
     if echo "$result" | grep -q "cattest"; then
-        pass_test "mycat displays file"
+        pass_test "cat displays file"
     else
-        fail_test "mycat failed" "Expected 'cattest', Got: '$result'"
+        fail_test "cat failed" "Expected 'cattest', Got: '$result'"
     fi
     rm catfile.txt
     
-    print_test "mytouch command"
-    run_ushell "mytouch newfile.txt" > /dev/null
+    print_test "touch command"
+    run_ushell "touch newfile.txt" > /dev/null
     if [ -f "newfile.txt" ]; then
-        pass_test "mytouch creates file"
+        pass_test "touch creates file"
         rm newfile.txt
     else
-        fail_test "mytouch failed to create file"
+        fail_test "touch failed to create file"
     fi
     
-    print_test "mycp command"
+    print_test "cp command"
     echo "original" > source.txt
-    run_ushell "mycp source.txt dest.txt" > /dev/null
+    run_ushell "cp source.txt dest.txt" > /dev/null
     if [ -f "dest.txt" ] && grep -q "original" dest.txt; then
-        pass_test "mycp copies file"
+        pass_test "cp copies file"
         rm source.txt dest.txt
     else
-        fail_test "mycp failed"
+        fail_test "cp failed"
     fi
     
-    print_test "mymv command"
+    print_test "mv command"
     echo "move" > moveme.txt
-    run_ushell "mymv moveme.txt moved.txt" > /dev/null
+    run_ushell "mv moveme.txt moved.txt" > /dev/null
     if [ -f "moved.txt" ] && [ ! -f "moveme.txt" ]; then
-        pass_test "mymv renames file"
+        pass_test "mv renames file"
         rm moved.txt
     else
-        fail_test "mymv failed"
+        fail_test "mv failed"
     fi
     
-    print_test "mymkdir command"
-    run_ushell "mymkdir testdir" > /dev/null
+    print_test "mkdir command"
+    run_ushell "mkdir testdir" > /dev/null
     if [ -d "testdir" ]; then
-        pass_test "mymkdir creates directory"
+        pass_test "mkdir creates directory"
         rmdir testdir
     else
-        fail_test "mymkdir failed"
+        fail_test "mkdir failed"
     fi
     
-    print_test "myrm command"
+    print_test "rm command"
     echo "delete" > deleteme.txt
-    run_ushell "myrm deleteme.txt" > /dev/null
+    run_ushell "rm deleteme.txt" > /dev/null
     if [ ! -f "deleteme.txt" ]; then
-        pass_test "myrm removes file"
+        pass_test "rm removes file"
     else
-        fail_test "myrm failed"
+        fail_test "rm failed"
         rm deleteme.txt
     fi
     
-    print_test "mystat command"
+    print_test "stat command"
     echo "stat" > statfile.txt
-    result=$(run_ushell "mystat statfile.txt")
+    result=$(run_ushell "stat statfile.txt")
     if echo "$result" | grep -q "statfile.txt"; then
-        pass_test "mystat shows file info"
+        pass_test "stat shows file info"
     else
-        fail_test "mystat failed"
+        fail_test "stat failed"
     fi
     rm statfile.txt
 }
@@ -471,22 +471,22 @@ test_integration() {
     
     print_test "conditional with tools"
     echo "data" > condfile.txt
-    result=$(run_ushell "if test -f condfile.txt then mycat condfile.txt fi")
+    result=$(run_ushell "if test -f condfile.txt then cat condfile.txt fi")
     if echo "$result" | grep -q "data"; then
-        pass_test "conditional with mycat"
+        pass_test "conditional with cat"
     else
         fail_test "conditional tool integration failed"
     fi
     rm condfile.txt
     
-    print_test "glob with myls"
+    print_test "glob with ls"
     touch glob1.tmp glob2.tmp glob3.tmp
-    result=$(run_ushell "myls *.tmp")
+    result=$(run_ushell "ls *.tmp")
     count=$(echo "$result" | wc -l | tr -d ' ')
     if [ "$count" = "3" ]; then
-        pass_test "glob with myls"
+        pass_test "glob with ls"
     else
-        fail_test "glob myls integration failed" "Expected 3 files, Got: $count"
+        fail_test "glob ls integration failed" "Expected 3 files, Got: $count"
     fi
     rm glob1.tmp glob2.tmp glob3.tmp
 }

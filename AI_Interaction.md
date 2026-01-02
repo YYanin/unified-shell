@@ -8880,3 +8880,200 @@ Workers efficiently process built-in commands from queue.
 Graceful shutdown ensures clean exit without thread leaks.
 Next: Prompt 4 - Ensure thread safety for global state (history, jobs, terminal).
 
+
+---
+
+## Session: January 1, 2026 - ESP32 Port Phase 1: Remove AI Integration (Prompt 1.1)
+
+### Objective
+Remove all AI integration from the unified shell to prepare for ESP32 port. This removes all Python dependencies and makes the shell pure C.
+
+### Changes Made
+
+#### 1. Deleted aiIntegr Directory
+Removed the entire directory containing Python AI helper files:
+- aiIntegr/ushell_ai.py (Python AI helper script)
+- aiIntegr/ushell_ai_venv.sh (Virtual environment setup)
+- aiIntegr/requirements.txt (Python dependencies)
+- aiIntegr/commands.json (Command catalog for AI)
+- aiIntegr/README.md (AI documentation)
+- aiIntegr/__pycache__/ (Python cache)
+
+#### 2. Removed AI Code from src/main.c
+Removed the following functions (~550 lines of code):
+- get_shell_state_json() - Collected shell state as JSON for AI context
+- call_ai_helper() - Executed Python AI helper script via popen()
+- read_confirmation() - Read y/n/e confirmation for AI suggestions
+- execute_ai_suggestion() - Executed AI-suggested commands
+- handle_ai_query() - Main handler for @ prefix queries
+
+Removed from main() function:
+- --commands-json flag handling (was used for AI catalog generation)
+- @ prefix detection block in REPL loop
+
+Updated main() function:
+- Removed AI-related comment about --commands-json flag
+- Added (void)argc; (void)argv; to suppress unused parameter warnings
+
+#### 3. Updated src/builtins/builtins.c
+Removed AI Integration section from builtin_help() output:
+- Removed @<query> documentation
+- Removed AI environment variables: OPENAI_API_KEY, USHELL_LLM_MODEL, USHELL_AI_HELPER, USHELL_AI_DEBUG, USHELL_AI_CONTEXT
+- Removed reference to aiIntegr/README.md
+
+#### 4. Updated unified-shell/README.md
+Removed entire "AI Integration" section including:
+- Quick Start with AI
+- Configuration (Heuristic Mode, OpenAI Mode)
+- Environment Variables table
+- Example Queries
+- Features list
+- Link to aiIntegr/README.md
+
+#### 5. Updated docs/USER_GUIDE.md
+Removed entire "AI-Assisted Command Suggestions" section (~200 lines) including:
+- Overview
+- Basic Usage
+- Confirmation Options
+- Shell State Context
+- Privacy Controls
+- Configuration (AI Helper Script Location, OpenAI Integration, Debug Mode)
+- How It Works
+- Tips for Best Results
+- Example Queries
+- Troubleshooting
+
+#### 6. Updated docs/DEVELOPER_GUIDE.md
+Removed "AI Integration System" from Table of Contents (renumbered entries 10-16 to 10-15)
+
+Removed entire "AI Integration System" section (~650 lines) including:
+- Overview with design principles
+- Architecture diagram
+- Key Components (Query Detection, AI Query Handler, AI Helper Caller, Shell State Context, Python AI Helper)
+- Data Flow (Command Catalog Flow, Context Flow)
+- Configuration (Environment Variables, Code Locations)
+- Testing AI Integration (Unit Tests, Integration Tests, Error Cases)
+- Adding AI Features
+- Performance Considerations (Latency, Token Usage)
+- Security Considerations (Shell Injection Prevention, Temp File Security, Privacy Protection)
+- Troubleshooting
+
+### Build Verification
+- Shell compiles successfully with make clean && make
+- No new warnings introduced
+- All existing warnings are from generated parser code or minor truncation warnings
+
+### Manual Tests Completed
+All tests from ESP32_Prompts.md passed:
+
+1. Verify aiIntegr directory is removed:
+   - Command: ls -la unified-shell/aiIntegr
+   - Result: No such file or directory [PASS]
+
+2. Verify no Python dependencies:
+   - Command: grep -r "python" unified-shell/src/
+   - Result: No matches [PASS]
+
+3. Verify no AI environment variables:
+   - Command: grep -r "OPENAI|AI_HELPER|LLM_MODEL" unified-shell/src/
+   - Result: No matches [PASS]
+
+4. Build and test:
+   - Command: cd unified-shell && make clean && make
+   - Result: Builds successfully [PASS]
+
+5. Test @ prefix:
+   - Command: @list files
+   - Result: "ushell: command not found: @list" (not AI call) [PASS]
+
+6. Test help:
+   - Command: help
+   - Result: No AI references in help output [PASS]
+
+### Files Modified
+- unified-shell/src/main.c (removed ~550 lines)
+- unified-shell/src/builtins/builtins.c (removed ~10 lines)
+- unified-shell/README.md (removed ~70 lines)
+- unified-shell/docs/USER_GUIDE.md (removed ~200 lines)
+- unified-shell/docs/DEVELOPER_GUIDE.md (removed ~650 lines)
+
+### Files Deleted
+- unified-shell/aiIntegr/ (entire directory)
+
+### Status: DONE
+Prompt 1.1 completed successfully. The shell now compiles as pure C with no Python or external AI dependencies.
+
+
+---
+
+## Session: January 1, 2026 - ESP32 Port Phase 1: Heuristic Command Suggestions (Prompt 1.2)
+
+### Objective
+Review and keep any heuristic command suggestion code that exists in pure C, or remove if it requires Python.
+
+### Analysis
+
+#### Search Results
+Searched for heuristic-related code in the C source files:
+- grep for: heuristic, similar, typo, did you mean, suggestion, levenshtein, edit distance
+- grep for: suggest, correction, spell, distance
+
+Result: No heuristic command suggestion code exists in pure C.
+
+The heuristic matching functionality was entirely implemented in:
+- aiIntegr/ushell_ai.py (Python) - ALREADY REMOVED in Prompt 1.1
+
+The Python heuristic code used pattern matching and keyword detection to suggest commands.
+This code was not implemented in C and was removed along with the AI integration.
+
+### Manual Tests
+Confirmed no heuristic suggestions exist:
+
+1. Test typo for pwd:
+   - Command: pdw
+   - Result: "ushell: command not found: pdw" [Expected behavior]
+
+2. Test typo for echo:
+   - Command: echoo hello
+   - Result: "ushell: command not found: echoo" [Expected behavior]
+
+### Changes Made
+
+#### Added TODO Comments for Future Implementation
+Added TODO comments in src/evaluator/executor.c at locations where "command not found" is printed:
+
+Location 1 (single command execution, ~line 75):
+```c
+if (errno == ENOENT) {
+    fprintf(stderr, "ushell: command not found: %s\n", argv[0]);
+    // TODO: Implement heuristic command suggestion in pure C
+    // Could use Levenshtein distance to suggest similar commands
+    // Example: "pdw" -> "Did you mean: pwd?"
+}
+```
+
+Location 2 (pipeline execution, ~line 571):
+```c
+execvp(commands[i].argv[0], commands[i].argv);
+fprintf(stderr, "ushell: command not found: %s\n", commands[i].argv[0]);
+// TODO: Implement heuristic command suggestion in pure C
+exit(127);
+```
+
+### Future Implementation Notes
+A pure C heuristic suggestion system could:
+1. Use Levenshtein distance algorithm to find similar command names
+2. Compare against list of built-in commands, tools, and PATH executables
+3. Suggest closest match if distance is below threshold (e.g., 2-3 edits)
+4. Example: "pdw" has Levenshtein distance 1 from "pwd"
+
+### Build Verification
+- Build successful with no new errors or warnings
+
+### Files Modified
+- unified-shell/src/evaluator/executor.c (added 2 TODO comments)
+
+### Status: DONE
+Prompt 1.2 completed. No pure C heuristic code existed (Python implementation was removed in 1.1). 
+TODO comments added for future implementation.
+

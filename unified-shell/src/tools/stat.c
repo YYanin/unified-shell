@@ -1,15 +1,15 @@
 /**
- * @file mystat.c
+ * @file stat.c
  * @brief A simple implementation of the 'stat' command in C.
  *
  * This program displays detailed information about one or more files,
  * including size, permissions, ownership, and timestamps.
  *
  * Compilation:
- * gcc mystat.c -o mystat
+ * gcc stat.c -o stat
  *
  * Example Usage:
- * ./mystat /etc/passwd
+ * ./stat /etc/passwd
  */
 
 #define _DEFAULT_SOURCE // For tm_zone
@@ -29,9 +29,9 @@ void format_permissions(mode_t mode, char *str);
 const char* get_file_type(mode_t mode);
 
 // --- Main Function ---
-int tool_mystat_main(int argc, char **argv) {
+int tool_stat_main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "mystat: missing operand\n");
+        fprintf(stderr, "stat: missing operand\n");
         return 1;
     }
 
@@ -57,7 +57,7 @@ void display_stat_info(const char *path) {
     // Use lstat() to get information about the file itself,
     // not what it points to if it's a symbolic link.
     if (lstat(path, &sb) == -1) {
-        fprintf(stderr, "mystat: cannot stat '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "stat: cannot stat '%s': %s\n", path, strerror(errno));
         return;
     }
 
@@ -169,10 +169,10 @@ const char* get_file_type(mode_t mode) {
 
 ### How to Compile and Run
 
-1.  **Save the Code:** Save the content above into a file named `mystat.c`.
+1.  **Save the Code:** Save the content above into a file named `stat.c`.
 2.  **Compile:** Open your terminal and use GCC to compile the program. You may need to link the math library for some systems, though it's often not required for this code.
     ```sh
-    gcc mystat.c -o mystat
+    gcc stat.c -o stat
     ```
 3.  **Run:** You can now use the program to inspect files.
 
@@ -180,16 +180,16 @@ const char* get_file_type(mode_t mode) {
 
     * **Stat a system file:**
         ```sh
-        ./mystat /etc/passwd
+        ./stat /etc/passwd
         ```
 
     * **Stat your shell executable:**
         ```sh
-        ./mystat /bin/bash
+        ./stat /bin/bash
         ```
 
     * **Stat a directory:**
         ```sh
-        ./mystat /tmp
+        ./stat /tmp
         
 */

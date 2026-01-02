@@ -1,19 +1,19 @@
 /**
- * @file myrmdir.c
+ * @file rmdir.c
  * @brief A simple implementation of the 'rmdir' command in C.
  *
  * This program removes one or more empty directories.
  *
  * Compilation:
- * gcc myrmdir.c -o myrmdir
+ * gcc rmdir.c -o rmdir
  *
  * Example Usages:
  *
  * # Remove an empty directory
- * ./myrmdir empty_dir
+ * ./rmdir empty_dir
  *
  * # Attempt to remove multiple directories
- * ./myrmdir temp_folder old_logs
+ * ./rmdir temp_folder old_logs
  */
 
 #include <stdio.h>
@@ -27,9 +27,9 @@
 void remove_empty_directory(const char *path);
 
 // --- Main Function ---
-int tool_myrmdir_main(int argc, char **argv) {
+int tool_rmdir_main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "myrmdir: missing operand\n");
+        fprintf(stderr, "rmdir: missing operand\n");
         return 1;
     }
 
@@ -53,13 +53,13 @@ void remove_empty_directory(const char *path) {
 
     // Use lstat to check the path without following symlinks
     if (lstat(path, &path_stat) != 0) {
-        fprintf(stderr, "myrmdir: failed to remove '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "rmdir: failed to remove '%s': %s\n", path, strerror(errno));
         return;
     }
 
     // Check if the path is actually a directory
     if (!S_ISDIR(path_stat.st_mode)) {
-        fprintf(stderr, "myrmdir: failed to remove '%s': Not a directory\n", path);
+        fprintf(stderr, "rmdir: failed to remove '%s': Not a directory\n", path);
         return;
     }
 
@@ -67,10 +67,10 @@ void remove_empty_directory(const char *path) {
     if (rmdir(path) != 0) {
         // Provide a specific error message if the directory is not empty
         if (errno == ENOTEMPTY) {
-            fprintf(stderr, "myrmdir: failed to remove '%s': Directory not empty\n", path);
+            fprintf(stderr, "rmdir: failed to remove '%s': Directory not empty\n", path);
         } else {
             // Provide a generic message for other errors (e.g., permissions)
-            fprintf(stderr, "myrmdir: failed to remove '%s': %s\n", path, strerror(errno));
+            fprintf(stderr, "rmdir: failed to remove '%s': %s\n", path, strerror(errno));
         }
     }
 }
@@ -79,10 +79,10 @@ void remove_empty_directory(const char *path) {
 
 ### How to Compile and Run
 
-1.  **Save the Code:** Save the content above into a file named `myrmdir.c`.
+1.  **Save the Code:** Save the content above into a file named `rmdir.c`.
 2.  **Compile:** Open your terminal and use GCC to compile the program:
     ```sh
-    gcc myrmdir.c -o myrmdir
+    gcc rmdir.c -o rmdir
     ```
 3.  **Run:** You can now use the program as described.
 
@@ -99,19 +99,19 @@ void remove_empty_directory(const char *path) {
 
     * **Successfully remove an empty directory:**
         ```sh
-        ./myrmdir empty_dir
+        ./rmdir empty_dir
         # No output, directory is removed
         ```
 
     * **Attempt to remove a non-empty directory:**
         ```sh
-        ./myrmdir not_empty_dir
-        # Output: myrmdir: failed to remove 'not_empty_dir': Directory not empty
+        ./rmdir not_empty_dir
+        # Output: rmdir: failed to remove 'not_empty_dir': Directory not empty
         ```
 
     * **Attempt to remove a path that is not a directory:**
         ```sh
-        ./myrmdir a_file.txt
-        # Output: myrmdir: failed to remove 'a_file.txt': Not a directory
+        ./rmdir a_file.txt
+        # Output: rmdir: failed to remove 'a_file.txt': Not a directory
         
 */
