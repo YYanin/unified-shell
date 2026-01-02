@@ -1828,3 +1828,38 @@ All documentation includes:
   - Examples and benefits of both features
   - Thread safety details and architecture diagrams
 
+
+# ESP32 Shell Port Prompts Created - Mon Dec 29 05:03:23 PM PST 2025
+Created ESP32_Prompts.md with implementation prompts for porting shell to ESP32:
+
+Phase 1: Remove AI Integration
+  - Prompt 1.1: Remove AI Helper Files and References
+  - Prompt 1.2: Keep Heuristic Command Suggestions (Optional)
+
+Phase 2: Rename Tool Commands
+  - Prompt 2.1: Rename Source Files (myls->ls, mycat->cat, etc.)
+  - Prompt 2.2: Update All References
+  - Prompt 2.3: Update Help Entries for Tools
+
+Phase 3: ESP32 Preparation
+  - Prompt 3.1: Create ESP32 Project Structure
+  - Prompt 3.2: Create Platform Abstraction Layer
+  - Prompt 3.3: Implement Virtual Filesystem Abstraction
+
+Phase 4: ESP32 Core Changes
+  - Prompt 4.1: Remove Fork/Exec - Direct Execution Only
+  - Prompt 4.2: Replace POSIX Threads with FreeRTOS Tasks
+  - Prompt 4.3: Adapt Terminal I/O for Serial Console
+  - Prompt 4.4: Simplify Parser for Embedded Use
+  - Prompt 4.5: Remove or Adapt Complex Features
+
+Phase 5: ESP32 Specific Features
+  - Prompt 5.1: Add ESP32-Specific Commands (reboot, free, uptime, info)
+  - Prompt 5.2: Implement Flash Filesystem Support (SPIFFS/LittleFS)
+  - Prompt 5.3: Configure Memory Optimization
+  - Prompt 5.4: Create ESP32 Build Configuration
+
+Phase 6: Testing and Documentation
+  - Prompt 6.1: Create ESP32 Test Suite
+  - Prompt 6.2: Update All Documentation
+
