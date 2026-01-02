@@ -13,8 +13,8 @@ static Env *completion_env = NULL;
 static const char *builtin_command_names[] = {
     "cd", "pwd", "echo", "export", "exit", "set", "unset", 
     "env", "help", "version", "history", "edi",
-    "myls", "mycat", "mycp", "mymv", "myrm", 
-    "mymkdir", "myrmdir", "mytouch", "mystat", "myfd",
+    "ls", "cat", "cp", "mv", "rm", 
+    "mkdir", "rmdir", "touch", "stat", "find",
     NULL
 };
 

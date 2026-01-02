@@ -1,23 +1,23 @@
 /**
- * @file mytouch.c
+ * @file touch.c
  * @brief A simple implementation of the 'touch' command in C.
  *
  * This program creates empty files if they do not exist, or updates
  * the access and modification timestamps of existing files to the current time.
  *
  * Compilation:
- * gcc mytouch.c -o mytouch
+ * gcc touch.c -o touch
  *
  * Example Usages:
  *
  * # Create a new, empty file
- * ./mytouch new_file.txt
+ * ./touch new_file.txt
  *
  * # Create multiple files
- * ./mytouch file1.txt file2.log
+ * ./touch file1.txt file2.log
  *
  * # Update the timestamp of an existing file
- * ./mytouch existing_document.md
+ * ./touch existing_document.md
  */
 
 #include <stdio.h>
@@ -33,9 +33,9 @@
 void touch_file(const char *path);
 
 // --- Main Function ---
-int tool_mytouch_main(int argc, char **argv) {
+int tool_touch_main(int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "mytouch: missing file operand\n");
+        fprintf(stderr, "touch: missing file operand\n");
         return 1;
     }
 
@@ -64,7 +64,7 @@ void touch_file(const char *path) {
         // O_WRONLY: open for writing only.
         int fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH); // 0644 permissions
         if (fd == -1) {
-            fprintf(stderr, "mytouch: cannot touch '%s': %s\n", path, strerror(errno));
+            fprintf(stderr, "touch: cannot touch '%s': %s\n", path, strerror(errno));
             return;
         }
         close(fd);
@@ -73,7 +73,7 @@ void touch_file(const char *path) {
         // Passing NULL to utime() sets the access and modification
         // times to the current time.
         if (utime(path, NULL) != 0) {
-            fprintf(stderr, "mytouch: cannot touch '%s': %s\n", path, strerror(errno));
+            fprintf(stderr, "touch: cannot touch '%s': %s\n", path, strerror(errno));
         }
     }
 }
@@ -82,10 +82,10 @@ void touch_file(const char *path) {
 
 ### How to Compile and Run
 
-1.  **Save the Code:** Save the content above into a file named `mytouch.c`.
+1.  **Save the Code:** Save the content above into a file named `touch.c`.
 2.  **Compile:** Open your terminal and use GCC to compile the program:
     ```sh
-    gcc mytouch.c -o mytouch
+    gcc touch.c -o touch
     ```
 3.  **Run:** You can now use the program to create or update files.
 
@@ -93,20 +93,20 @@ void touch_file(const char *path) {
 
     * **Create a new file:**
         ```sh
-        ./mytouch new_file.txt
+        ./touch new_file.txt
         ls -l new_file.txt  # Verify it was created
         ```
 
     * **Create multiple files at once:**
         ```sh
-        ./mytouch report.log config.yml
+        ./touch report.log config.yml
         ```
 
     * **Update the timestamp of an existing file:**
         ```sh
         # Wait a moment after creation
         sleep 2
-        ./mytouch new_file.txt
+        ./touch new_file.txt
         ls -l new_file.txt  # Verify the timestamp has changed
         
 */

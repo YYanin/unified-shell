@@ -277,7 +277,7 @@ ec<TAB>          # Completes to: echo
 hi<TAB>          # Completes to: history
 
 # Works with integrated tools
-my<TAB>          # Shows: mycat mycp myls mymkdir mymv myrm myrmdir mytouch
+my<TAB>          # Shows: cat cp ls mkdir mv rm rmdir touch
 ```
 
 #### Filename Completion
@@ -494,12 +494,12 @@ The condition is any command. If it exits with status 0 (success), the then bloc
 
 ```bash
 # Check if file exists
-if myls test.txt then
+if ls test.txt then
     echo File exists
 fi
 
 # Check if directory exists
-if myls /tmp then
+if ls /tmp then
     echo /tmp directory found
 fi
 
@@ -527,12 +527,12 @@ fi
 
 ```bash
 # Run command and check status
-if mycat existing_file.txt then
+if cat existing_file.txt then
     echo File read successfully
 fi
 
 # Command that might fail
-if mycp source.txt dest.txt then
+if cp source.txt dest.txt then
     echo Copy successful
 fi
 ```
@@ -546,13 +546,13 @@ if cd /tmp then
 fi
 
 # Create file if doesn't exist
-if myls backup.txt then
+if ls backup.txt then
     echo Backup exists
 fi
 
 # With variable expansion
 set FILE=test.txt
-if mycat $FILE then
+if cat $FILE then
     echo Read $FILE successfully
 fi
 ```
@@ -574,52 +574,52 @@ command1 | command2
 #### Two-Stage Pipelines
 ```bash
 # List files and search for pattern
-myls | myfd .c
+ls | find .c
 
 # Display file and search
-mycat file.txt | grep keyword
+cat file.txt | grep keyword
 
 # Generate data and process
-echo "test data" | mycat
+echo "test data" | cat
 ```
 
 #### Three-Stage Pipelines
 ```bash
 # List, filter, display
-myls /tmp | myfd test | mycat
+ls /tmp | find test | cat
 
 # Multiple filters
-mycat large.txt | grep pattern | mycat
+cat large.txt | grep pattern | cat
 ```
 
 ### Practical Examples
 
 ```bash
 # Find all C files
-myls src/ | myfd .c
+ls src/ | find .c
 
 # Search through multiple files
-mycat *.txt | grep error
+cat *.txt | grep error
 
 # Process and display
-echo "Line 1\nLine 2" | mycat
+echo "Line 1\nLine 2" | cat
 
 # Count files (with external wc)
-myls | wc -l
+ls | wc -l
 ```
 
 ### Pipeline with Built-ins
 
 ```bash
 # Echo and pipe
-echo "Hello World" | mycat
+echo "Hello World" | cat
 
 # Variables in pipelines
 set NAME=test
-echo $NAME | mycat
+echo $NAME | cat
 
 # Arithmetic in pipelines
-echo $((5 + 5)) | mycat
+echo $((5 + 5)) | cat
 ```
 
 ---
@@ -636,7 +636,7 @@ Overwrites the file:
 echo "Hello" > output.txt
 
 # Redirect command output
-myls > file_list.txt
+ls > file_list.txt
 
 # Redirect with variables
 set MSG="Important data"
@@ -653,7 +653,7 @@ echo "Line 2" >> log.txt
 echo "Line 3" >> log.txt
 
 # Append command output
-myls >> file_log.txt
+ls >> file_log.txt
 ```
 
 ### Input Redirection
@@ -663,7 +663,7 @@ Read command input from file:
 
 ```bash
 # Read from file
-mycat < input.txt
+cat < input.txt
 
 # With grep
 grep pattern < data.txt
@@ -673,14 +673,14 @@ grep pattern < data.txt
 
 ```bash
 # Input and output
-mycat < input.txt > output.txt
+cat < input.txt > output.txt
 
 # Input and append
-mycat < data.txt >> combined.txt
+cat < data.txt >> combined.txt
 
 # Multiple operations
 echo "Header" > report.txt
-mycat < data.txt >> report.txt
+cat < data.txt >> report.txt
 echo "Footer" >> report.txt
 ```
 
@@ -688,19 +688,19 @@ echo "Footer" >> report.txt
 
 ```bash
 # Save directory listing
-myls /tmp > tmp_contents.txt
+ls /tmp > tmp_contents.txt
 
 # Build a report
 echo "System Report" > report.txt
 echo "=============" >> report.txt
 echo "Date: $(date)" >> report.txt
-myls >> report.txt
+ls >> report.txt
 
 # Process file and save
-mycat data.txt > processed.txt
+cat data.txt > processed.txt
 
 # Copy file using redirection
-mycat < source.txt > destination.txt
+cat < source.txt > destination.txt
 ```
 
 ---
@@ -724,9 +724,9 @@ echo *_backup.txt
 echo *
 
 # Use with commands
-myls *.c
-mycat test*.txt
-myrm old_*.log
+ls *.c
+cat test*.txt
+rm old_*.log
 ```
 
 #### Question Mark (?) - Match Single Character
@@ -778,16 +778,16 @@ echo file[!0-9].txt      # file*.txt where * is not a digit
 
 ```bash
 # List all C source files
-myls *.c
+ls *.c
 
 # Copy all text files
-mycp *.txt backup/
+cp *.txt backup/
 
 # Remove old logs
-myrm old_*.log
+rm old_*.log
 
 # Find all test files
-myls test*.txt
+ls test*.txt
 
 # Match specific patterns
 echo [Tt]est*.txt        # Test*.txt or test*.txt
@@ -803,10 +803,10 @@ echo *[0-9][0-9].txt     # Files ending with two digits before .txt
 echo *.c *.h *.txt
 
 # With pipes
-myls *.txt | myfd backup
+ls *.txt | find backup
 
 # With redirection
-mycat *.txt > combined.txt
+cat *.txt > combined.txt
 ```
 
 ---
@@ -2003,143 +2003,143 @@ To add your own packages:
 
 All tools are built into the shell and execute without forking:
 
-### myls - List Directory
+### ls - List Directory
 
 ```bash
 # List current directory
-myls
+ls
 
 # List specific directory
-myls /tmp
-myls /home/user/documents
+ls /tmp
+ls /home/user/documents
 
 # Use with globs
-myls *.txt
+ls *.txt
 
 # In pipelines
-myls | myfd .c
+ls | find .c
 ```
 
-### mycat - Display Files
+### cat - Display Files
 
 ```bash
 # Display single file
-mycat file.txt
+cat file.txt
 
 # Display multiple files
-mycat file1.txt file2.txt file3.txt
+cat file1.txt file2.txt file3.txt
 
 # With redirection
-mycat < input.txt
-mycat file.txt > output.txt
+cat < input.txt
+cat file.txt > output.txt
 
 # In pipelines
-mycat data.txt | grep pattern
+cat data.txt | grep pattern
 ```
 
-### mycp - Copy Files
+### cp - Copy Files
 
 ```bash
 # Copy single file
-mycp source.txt destination.txt
+cp source.txt destination.txt
 
 # Copy to directory
-mycp file.txt /tmp/
+cp file.txt /tmp/
 
 # Copy with glob
-mycp *.txt backup/
+cp *.txt backup/
 
 # With variables
 set SOURCE=data.txt
 set DEST=backup.txt
-mycp $SOURCE $DEST
+cp $SOURCE $DEST
 ```
 
-### mymv - Move/Rename Files
+### mv - Move/Rename Files
 
 ```bash
 # Rename file
-mymv oldname.txt newname.txt
+mv oldname.txt newname.txt
 
 # Move to directory
-mymv file.txt /tmp/
+mv file.txt /tmp/
 
 # Move multiple files (with globs)
-mymv *.log logs/
+mv *.log logs/
 ```
 
-### myrm - Remove Files
+### rm - Remove Files
 
 ```bash
 # Remove single file
-myrm file.txt
+rm file.txt
 
 # Remove multiple files
-myrm file1.txt file2.txt file3.txt
+rm file1.txt file2.txt file3.txt
 
 # Remove with glob
-myrm *.tmp
-myrm old_*.log
+rm *.tmp
+rm old_*.log
 
 # Careful - no confirmation!
 ```
 
-### mymkdir - Create Directories
+### mkdir - Create Directories
 
 ```bash
 # Create single directory
-mymkdir newdir
+mkdir newdir
 
 # Create multiple directories
-mymkdir dir1 dir2 dir3
+mkdir dir1 dir2 dir3
 
 # Create nested directories
-mymkdir -p parent/child/grandchild
+mkdir -p parent/child/grandchild
 
 # With variables
 set BACKUP_DIR=backup_$(date +%Y%m%d)
-mymkdir $BACKUP_DIR
+mkdir $BACKUP_DIR
 ```
 
-### myrmdir - Remove Empty Directories
+### rmdir - Remove Empty Directories
 
 ```bash
 # Remove empty directory
-myrmdir emptydir
+rmdir emptydir
 
 # Remove multiple empty directories
-myrmdir dir1 dir2 dir3
+rmdir dir1 dir2 dir3
 
 # Note: fails if directory not empty
 ```
 
-### mytouch - Create/Update Files
+### touch - Create/Update Files
 
 ```bash
 # Create new file
-mytouch newfile.txt
+touch newfile.txt
 
 # Update timestamp
-mytouch existing.txt
+touch existing.txt
 
 # Create multiple files
-mytouch file1.txt file2.txt file3.txt
+touch file1.txt file2.txt file3.txt
 
 # Create with glob patterns
-mytouch test{1,2,3}.txt
+touch test{1,2,3}.txt
 ```
 
-### mystat - File Information
+### stat - File Information
 
 ```bash
 # Show file status
-mystat file.txt
+stat file.txt
 
 # Multiple files
-mystat *.txt
+stat *.txt
 
 # Directory status
-mystat /tmp
+stat /tmp
 ```
 
 Shows:
@@ -2150,23 +2150,23 @@ Shows:
 - UID/GID
 - Timestamps
 
-### myfd - Find Files
+### find - Find Files
 
 ```bash
 # Find in current directory
-myfd pattern
+find pattern
 
 # Find in specific directory
-myfd pattern /home/user
+find pattern /home/user
 
 # Find C files
-myfd .c
+find .c
 
 # Find and process
-myfd test | mycat
+find test | cat
 
 # Find with wildcards
-myfd "*.txt"
+find "*.txt"
 ```
 
 ---
@@ -2196,34 +2196,34 @@ echo Result: $((X * Y + 20))
 
 # Variables + conditionals
 set FILE=test.txt
-if mycat $FILE then
+if cat $FILE then
     echo File $FILE exists
 fi
 
 # Globs + pipelines
-myls *.c | myfd main
+ls *.c | find main
 
 # Redirection + variables
 set OUTPUT=result.txt
 echo Data > $OUTPUT
-mycat input.txt >> $OUTPUT
+cat input.txt >> $OUTPUT
 ```
 
 ### Efficient File Operations
 
 ```bash
 # Backup files
-mycp important.txt important.txt.bak
+cp important.txt important.txt.bak
 
 # Create directory structure
-mymkdir -p project/src project/include project/tests
+mkdir -p project/src project/include project/tests
 
 # Quick file search
-myfd pattern | mycat
+find pattern | cat
 
 # Batch operations
-myrm *.tmp
-mycp *.txt backup/
+rm *.tmp
+cp *.txt backup/
 ```
 
 ### Using Arithmetic
@@ -2248,7 +2248,7 @@ cd $PROJ
 # Reusable commands with variables
 set BACKUP_DIR=/backup
 set DATE=$(date +%Y%m%d)
-mymkdir $BACKUP_DIR/$DATE
+mkdir $BACKUP_DIR/$DATE
 
 # Template creation
 echo "# New File" > template.txt
@@ -2292,19 +2292,19 @@ echo $X
 # ushell: permission denied: ./script.sh
 
 # Solution: Check file permissions
-mystat script.sh
+stat script.sh
 chmod +x script.sh  # If needed
 ```
 
 #### File Not Found
 ```bash
 # Issue:
-mycat nonexistent.txt
+cat nonexistent.txt
 # Error: cannot open file
 
 # Solution: Check if file exists
-myls
-mystat nonexistent.txt
+ls
+stat nonexistent.txt
 ```
 
 #### Glob Not Expanding
@@ -2314,8 +2314,8 @@ echo *.txt
 # Output: *.txt (no files matched)
 
 # Solution: Check if matching files exist
-myls
-myls *.txt
+ls
+ls *.txt
 ```
 
 ### Error Messages
@@ -2389,7 +2389,7 @@ ca<TAB>          # Ambiguous: cat, calc, etc.
 cat<TAB>         # Completes to: cat
 
 # Solution 2: Press Tab twice to see all matches
-my<TAB><TAB>     # Shows: mycat mycp myls...
+my<TAB><TAB>     # Shows: cat cp ls...
 ```
 
 #### History Not Saving
@@ -2412,8 +2412,8 @@ ls -la ~/.ushell_history
 echo $VAR
 
 # Verify file existence
-myls filename
-mystat filename
+ls filename
+stat filename
 
 # Test conditionals
 if true then echo Success fi
@@ -2436,8 +2436,8 @@ history
 
 1. **Always check file existence before operations**
    ```bash
-   if myls file.txt then
-       mycp file.txt backup.txt
+   if ls file.txt then
+       cp file.txt backup.txt
    fi
    ```
 
@@ -2449,15 +2449,15 @@ history
 
 3. **Test commands before using in conditionals**
    ```bash
-   myls test.txt
-   if myls test.txt then echo Found fi
+   ls test.txt
+   if ls test.txt then echo Found fi
    ```
 
 4. **Be careful with destructive operations**
    ```bash
    # Check before removing
-   myls old_*.log
-   myrm old_*.log
+   ls old_*.log
+   rm old_*.log
    ```
 
 5. **Use help when unsure**
@@ -2468,187 +2468,6 @@ history
 
 ---
 
-## AI-Assisted Command Suggestions
-
-### Overview
-
-Unified shell includes an AI helper that can translate natural language queries into shell commands. This feature helps you discover commands and correct syntax without leaving the shell.
-
-### Basic Usage
-
-Start any line with `@` to ask for a command suggestion:
-
-```bash
-ushell:~> @list all C files
-Suggestion: myfd .c
-Accept? [y/n/e]:
-```
-
-The shell will:
-1. Send your query to the AI helper
-2. Display the suggested command
-3. Ask for confirmation before executing
-
-### Confirmation Options
-
-When presented with a suggestion, you have three choices:
-
-- **y (yes)**: Execute the suggested command immediately
-- **n (no)**: Discard the suggestion and return to the prompt
-- **e (edit)**: View the suggestion and type your own edited version
-
-**Example of editing:**
-```bash
-ushell:~> @remove all log files
-Suggestion: myrm *.log
-Accept? [y/n/e]: e
-Original: myrm *.log
-Enter edited command: myrm old_*.log
-```
-
-### Shell State Context
-
-By default, the AI helper receives context about your current shell session to provide better suggestions:
-
-- Current working directory
-- Username
-- Recent command history (last 5 commands)
-- Environment variables (excluding sensitive ones)
-
-**Context-aware example:**
-```bash
-ushell:~/Documents> @show files here
-# AI knows you're in ~/Documents and suggests:
-Suggestion: myls
-```
-
-### Privacy Controls
-
-#### Disabling Context Sharing
-
-If you prefer not to share shell state with the AI helper, set `USHELL_AI_CONTEXT=0`:
-
-```bash
-export USHELL_AI_CONTEXT=0
-```
-
-This disables all context collection and sharing. Only your natural language query will be sent to the AI helper.
-
-#### What's Excluded Automatically
-
-Even with context enabled, the shell automatically filters out sensitive information:
-
-- Environment variables containing: PASSWORD, TOKEN, KEY, SECRET, CREDENTIAL
-- Values are truncated to 200 characters maximum
-- Only recent commands (not full history) are included
-
-### Configuration
-
-#### AI Helper Script Location
-
-Set `USHELL_AI_HELPER` to specify a custom AI helper script:
-
-```bash
-export USHELL_AI_HELPER=/path/to/custom_ai.py
-```
-
-Default: `./aiIntegr/ushell_ai.py`
-
-#### OpenAI Integration (Optional)
-
-For enhanced suggestions using OpenAI models:
-
-```bash
-# Install OpenAI Python package
-pip install openai
-
-# Set API key
-export OPENAI_API_KEY="your-api-key-here"
-
-# Optional: specify model (default: gpt-4o-mini)
-export USHELL_LLM_MODEL="gpt-4o"
-```
-
-Without an API key, the AI helper uses built-in heuristic matching (no network required).
-
-#### Debug Mode
-
-Enable debug output to see what's happening behind the scenes:
-
-```bash
-export USHELL_AI_DEBUG=1
-```
-
-Debug messages appear on stderr showing:
-- Catalog loading
-- Context generation
-- Suggestion selection process
-
-### How It Works
-
-1. **Query Detection**: Shell detects `@` prefix and extracts your query
-2. **Context Collection**: If enabled, gathers current shell state as JSON
-3. **AI Helper Call**: Executes Python script with query and optional context
-4. **Suggestion**: Helper returns single command line suggestion
-5. **Confirmation**: Shell prompts you to accept, reject, or edit
-6. **Execution**: On acceptance, command runs through normal shell pipeline
-7. **History**: Both query and executed command are saved to history
-
-### Tips for Best Results
-
-1. **Be specific**: "list C files" is better than "show files"
-2. **Use natural language**: "copy file.txt to backup" works well
-3. **Context helps**: AI knows your current directory and recent commands
-4. **Edit when needed**: Use 'e' option to refine suggestions
-5. **Privacy first**: Disable context if working with sensitive data
-
-### Example Queries
-
-```bash
-# File operations
-@list all files
-@copy readme to backup
-@remove old log files
-@create a new directory called test
-
-# Navigation
-@go to home directory
-@show current path
-
-# Search
-@find all Python files
-@search for TODO in source files
-
-# Package management (if apt is available)
-@search for git package
-@install python
-
-# System info
-@show environment variables
-@list recent commands
-```
-
-### Troubleshooting
-
-**"AI helper not found"**
-- Check that `aiIntegr/ushell_ai.py` exists and is executable
-- Or set `USHELL_AI_HELPER` to correct path
-
-**"AI helper produced no output"**
-- Try enabling debug mode: `export USHELL_AI_DEBUG=1`
-- Check that Python 3 is available: `python3 --version`
-
-**Poor suggestions**
-- Be more specific in your query
-- Consider installing OpenAI package for better results
-- Use 'e' option to edit suggestions
-
-**Context not working**
-- Verify `USHELL_AI_CONTEXT` is not set to 0
-- Enable debug mode to see context generation
-
----
-
 ## Summary
 
 ### Quick Reference
@@ -2656,10 +2475,10 @@ Debug messages appear on stderr showing:
 | Category | Commands |
 |----------|----------|
 | **Navigation** | cd, pwd |
-| **Display** | echo, mycat, myls |
-| **Files** | mycp, mymv, myrm, mytouch, mystat |
-| **Directories** | mymkdir, myrmdir |
-| **Search** | myfd |
+| **Display** | echo, cat, ls |
+| **Files** | cp, mv, rm, touch, stat |
+| **Directories** | mkdir, rmdir |
+| **Search** | find |
 | **Variables** | set, export, unset, env |
 | **System** | help, version, exit |
 
@@ -2669,11 +2488,11 @@ Debug messages appear on stderr showing:
 |---------|--------|---------|
 | **Variable** | $VAR | echo $HOME |
 | **Arithmetic** | $((expr)) | echo $((5 + 3)) |
-| **Conditional** | if cmd then ... fi | if myls file then echo Found fi |
-| **Pipeline** | cmd1 \| cmd2 | myls \| myfd .c |
+| **Conditional** | if cmd then ... fi | if ls file then echo Found fi |
+| **Pipeline** | cmd1 \| cmd2 | ls \| find .c |
 | **Redirect Out** | cmd > file | echo data > file.txt |
 | **Redirect Append** | cmd >> file | echo data >> file.txt |
-| **Redirect In** | cmd < file | mycat < file.txt |
+| **Redirect In** | cmd < file | cat < file.txt |
 | **Glob Star** | * | echo *.txt |
 | **Glob Question** | ? | echo file?.txt |
 | **Glob Range** | [a-z] | echo [0-9]*.txt |

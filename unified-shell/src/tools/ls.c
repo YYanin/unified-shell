@@ -1,20 +1,20 @@
 /**
- * @file myls.c
+ * @file ls.c
  * @brief A simple implementation of the 'ls' command in C.
  *
  * This program lists the contents of a directory with support for long format (-l),
  * showing all files (-a), and respecting .gitignore files.
  *
  * Compilation:
- * gcc myls.c -o myls
+ * gcc ls.c -o ls
  *
  * Example Usages:
- * ./myls
- * ./myls /path/to/directory
- * ./myls -l
- * ./myls -a
- * ./myls -la src
- * ./myls "*.c"
+ * ./ls
+ * ./ls /path/to/directory
+ * ./ls -l
+ * ./ls -a
+ * ./ls -la src
+ * ./ls "*.c"
  */
 
 #include <stdio.h>
@@ -42,7 +42,7 @@ bool should_ignore(const char *name, char ignore_patterns[MAX_IGNORE_PATTERNS][2
 
 // --- Main Function ---
 
-int tool_myls_main(int argc, char **argv) {
+int tool_ls_main(int argc, char **argv) {
     bool show_all = false;
     bool long_format = false;
     const char *path = ".";
@@ -60,7 +60,7 @@ int tool_myls_main(int argc, char **argv) {
                 } else if (argv[i][j] == 'a') {
                     show_all = true;
                 } else {
-                    fprintf(stderr, "myls: invalid option -- '%c'\n", argv[i][j]);
+                    fprintf(stderr, "ls: invalid option -- '%c'\n", argv[i][j]);
                     return 1;
                 }
             }
@@ -74,7 +74,7 @@ int tool_myls_main(int argc, char **argv) {
             } else if (path_arg_count == 2) {
                 pattern = argv[i];
             } else {
-                 fprintf(stderr, "myls: too many arguments. Provide at most one path and one pattern.\n");
+                 fprintf(stderr, "ls: too many arguments. Provide at most one path and one pattern.\n");
                  return 1;
             }
         }
@@ -118,7 +118,7 @@ int tool_myls_main(int argc, char **argv) {
 void list_directory(const char *path, bool show_all, bool long_format, const char *pattern) {
     DIR *d = opendir(path);
     if (d == NULL) {
-        perror("myls: cannot open directory");
+        perror("ls: cannot open directory");
         return;
     }
 
@@ -175,7 +175,7 @@ void print_long_format(const char *filepath, const char *name) {
     struct stat file_stat;
     // Use lstat to get info about the link itself, not the file it points to
     if (lstat(filepath, &file_stat) == -1) {
-        perror("myls: lstat");
+        perror("ls: lstat");
         return;
     }
 

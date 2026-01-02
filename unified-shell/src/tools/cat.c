@@ -1,20 +1,20 @@
 /**
- * @file mycat.c
+ * @file cat.c
  * @brief A simple implementation of the 'cat' command in C.
  *
  * This program reads one or more files and prints their contents to
  * standard output in sequence.
  *
  * Compilation:
- * gcc mycat.c -o mycat
+ * gcc cat.c -o cat
  *
  * Example Usages:
  *
  * # Display the contents of a single file
- * ./mycat chapter1.txt
+ * ./cat chapter1.txt
  *
  * # Concatenate and display multiple files
- * ./mycat header.txt main.txt footer.txt
+ * ./cat header.txt main.txt footer.txt
  */
 
 #include <stdio.h>
@@ -27,8 +27,8 @@
 void display_file(const char *path);
 
 // --- Main Function ---
-int tool_mycat_main(int argc, char **argv) {
-    // If no arguments are given, mycat should do nothing and exit.
+int tool_cat_main(int argc, char **argv) {
+    // If no arguments are given, cat should do nothing and exit.
     if (argc < 2) {
         return 0;
     }
@@ -54,13 +54,13 @@ void display_file(const char *path) {
     // First, check if the path exists and what type it is.
     // stat() will set errno if the file doesn't exist.
     if (stat(path, &path_stat) != 0) {
-        fprintf(stderr, "mycat: '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "cat: '%s': %s\n", path, strerror(errno));
         return;
     }
 
     // Check if the path is a directory
     if (S_ISDIR(path_stat.st_mode)) {
-        fprintf(stderr, "mycat: '%s': Is a directory\n", path);
+        fprintf(stderr, "cat: '%s': Is a directory\n", path);
         return;
     }
 
@@ -68,7 +68,7 @@ void display_file(const char *path) {
     FILE *file = fopen(path, "r");
     if (file == NULL) {
         // This will catch other errors like permission denied (EACCES)
-        fprintf(stderr, "mycat: '%s': %s\n", path, strerror(errno));
+        fprintf(stderr, "cat: '%s': %s\n", path, strerror(errno));
         return;
     }
 
@@ -79,14 +79,14 @@ void display_file(const char *path) {
         // fwrite returns the number of items successfully written.
         // If it's not equal to bytes_read, an error occurred.
         if (fwrite(buffer, 1, bytes_read, stdout) != bytes_read) {
-            perror("mycat: write error");
+            perror("cat: write error");
             break;
         }
     }
 
     // Check if the loop terminated because of a read error
     if (ferror(file)) {
-        fprintf(stderr, "mycat: error reading '%s'\n", path);
+        fprintf(stderr, "cat: error reading '%s'\n", path);
     }
 
     fclose(file);
@@ -96,10 +96,10 @@ void display_file(const char *path) {
 
 ### How to Compile and Run
 
-1.  **Save the Code:** Save the content above into a file named `mycat.c`.
+1.  **Save the Code:** Save the content above into a file named `cat.c`.
 2.  **Compile:** Open your terminal and use GCC to compile the program:
     ```sh
-    gcc mycat.c -o mycat
+    gcc cat.c -o cat
     ```
 3.  **Run:** You can now use the program to display file contents.
 
@@ -115,13 +115,13 @@ void display_file(const char *path) {
 
     * **Display a single file:**
         ```sh
-        ./mycat header.txt
+        ./cat header.txt
         # Output: This is the header.
         ```
 
     * **Concatenate and display multiple files:**
         ```sh
-        ./mycat header.txt main.txt
+        ./cat header.txt main.txt
         # Output:
         # This is the header.
         # This is the main content.
@@ -129,7 +129,7 @@ void display_file(const char *path) {
 
     * **Attempt to use a non-existent file:**
         ```sh
-        ./mycat no_such_file.txt
-        # Output: mycat: 'no_such_file.txt': No such file or directory
+        ./cat no_such_file.txt
+        # Output: cat: 'no_such_file.txt': No such file or directory
         
 */

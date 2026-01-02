@@ -334,6 +334,208 @@ static const HelpEntry help_entries[] = {
             "exit 1                  Exit with error status"
     },
 
+    /* ========================================================================
+     * Integrated Tool Commands
+     * ======================================================================== */
+
+    /* ls - List Directory Contents */
+    {
+        .name = "ls",
+        .summary = "List directory contents",
+        .usage = "ls [options] [directory] [pattern]",
+        .description =
+            "Lists files and directories in the specified directory.\n"
+            "If no directory is given, lists the current directory.\n"
+            "Supports glob patterns for filtering output.\n"
+            "Directories are displayed with a trailing slash.",
+        .options =
+            "-l              Long listing format (detailed info)\n"
+            "-a              Show hidden files (starting with .)\n"
+            "directory       Directory to list (optional, default: .)\n"
+            "pattern         Glob pattern to filter files (optional)",
+        .examples =
+            "ls                      List current directory\n"
+            "ls /tmp                 List /tmp directory\n"
+            "ls -l                   Long format listing\n"
+            "ls -a                   Show hidden files\n"
+            "ls -la src              Detailed listing of src/\n"
+            "ls *.c                  List only .c files"
+    },
+
+    /* cat - Display File Contents */
+    {
+        .name = "cat",
+        .summary = "Display file contents",
+        .usage = "cat <file> [file...]",
+        .description =
+            "Concatenates and displays the contents of one or more files.\n"
+            "If multiple files are specified, their contents are combined.\n"
+            "Can read from stdin when used with pipes.",
+        .options =
+            "file...          One or more files to display (required)",
+        .examples =
+            "cat file.txt            Display file contents\n"
+            "cat a.txt b.txt         Concatenate two files\n"
+            "cat < input.txt         Read from stdin\n"
+            "cat file.txt | grep x   Pipe output to grep"
+    },
+
+    /* cp - Copy Files */
+    {
+        .name = "cp",
+        .summary = "Copy files and directories",
+        .usage = "cp [options] <source> <dest>",
+        .description =
+            "Copies files or directories from source to destination.\n"
+            "Can copy single files or entire directory trees.\n"
+            "Supports glob patterns for multiple file copy.",
+        .options =
+            "-r              Recursive copy (for directories)\n"
+            "-i              Interactive mode (prompt before overwrite)\n"
+            "source          Source file or directory (required)\n"
+            "dest            Destination path (required)",
+        .examples =
+            "cp file.txt backup.txt  Copy file\n"
+            "cp file.txt /tmp/       Copy to directory\n"
+            "cp -r src/ backup/      Copy directory recursively\n"
+            "cp -i a.txt b.txt       Prompt before overwriting\n"
+            "cp *.txt backup/        Copy multiple files"
+    },
+
+    /* mv - Move/Rename Files */
+    {
+        .name = "mv",
+        .summary = "Move or rename files and directories",
+        .usage = "mv [options] <source> <dest>",
+        .description =
+            "Moves or renames files and directories.\n"
+            "If destination is a directory, file is moved into it.\n"
+            "If destination is a file path, source is renamed.",
+        .options =
+            "-i              Interactive mode (prompt before overwrite)\n"
+            "source          Source file or directory (required)\n"
+            "dest            Destination path (required)",
+        .examples =
+            "mv old.txt new.txt      Rename file\n"
+            "mv file.txt /tmp/       Move to directory\n"
+            "mv -i a.txt b.txt       Prompt before overwriting\n"
+            "mv *.log logs/          Move multiple files"
+    },
+
+    /* rm - Remove Files */
+    {
+        .name = "rm",
+        .summary = "Remove files and directories",
+        .usage = "rm [options] <file> [file...]",
+        .description =
+            "Removes (deletes) files and directories.\n"
+            "By default, does not remove directories.\n"
+            "Use -r for recursive removal of directories.",
+        .options =
+            "-r              Recursive removal (for directories)\n"
+            "-i              Interactive mode (prompt before each removal)\n"
+            "file...         One or more files to remove (required)",
+        .examples =
+            "rm file.txt             Remove a file\n"
+            "rm a.txt b.txt          Remove multiple files\n"
+            "rm -r directory/        Remove directory recursively\n"
+            "rm -i important.txt     Prompt before removing\n"
+            "rm *.tmp                Remove files matching pattern"
+    },
+
+    /* mkdir - Create Directory */
+    {
+        .name = "mkdir",
+        .summary = "Create directories",
+        .usage = "mkdir [options] <directory> [directory...]",
+        .description =
+            "Creates one or more directories.\n"
+            "With -p option, creates parent directories as needed.\n"
+            "Fails if directory already exists (without -p).",
+        .options =
+            "-p              Create parent directories as needed\n"
+            "directory...    One or more directories to create (required)",
+        .examples =
+            "mkdir newdir            Create a directory\n"
+            "mkdir a b c             Create multiple directories\n"
+            "mkdir -p a/b/c          Create nested directories\n"
+            "mkdir project/src       Create in existing parent"
+    },
+
+    /* rmdir - Remove Empty Directory */
+    {
+        .name = "rmdir",
+        .summary = "Remove empty directories",
+        .usage = "rmdir <directory> [directory...]",
+        .description =
+            "Removes empty directories only.\n"
+            "Fails if the directory contains any files or subdirectories.\n"
+            "Use 'rm -r' to remove directories with contents.",
+        .options =
+            "directory...    One or more directories to remove (required)",
+        .examples =
+            "rmdir emptydir          Remove empty directory\n"
+            "rmdir a b c             Remove multiple empty dirs\n"
+            "rmdir temp/             Remove empty temp directory"
+    },
+
+    /* touch - Create/Update File */
+    {
+        .name = "touch",
+        .summary = "Create empty file or update timestamp",
+        .usage = "touch <file> [file...]",
+        .description =
+            "Creates empty files if they don't exist.\n"
+            "Updates the modification timestamp if file exists.\n"
+            "Commonly used to create placeholder files.",
+        .options =
+            "file...          One or more files to touch (required)",
+        .examples =
+            "touch newfile.txt       Create empty file\n"
+            "touch a.txt b.txt       Create multiple files\n"
+            "touch existing.txt      Update timestamp"
+    },
+
+    /* stat - Display File Status */
+    {
+        .name = "stat",
+        .summary = "Display file status information",
+        .usage = "stat <file> [file...]",
+        .description =
+            "Displays detailed information about files.\n"
+            "Shows size, permissions, timestamps, and more.\n"
+            "Useful for debugging file permission issues.",
+        .options =
+            "file...          One or more files to stat (required)",
+        .examples =
+            "stat file.txt           Show file information\n"
+            "stat /tmp               Show directory info\n"
+            "stat *.c                Show info for all .c files"
+    },
+
+    /* find - Search for Files */
+    {
+        .name = "find",
+        .summary = "Search for files by name pattern",
+        .usage = "find [options] <pattern> [directory]",
+        .description =
+            "Searches for files matching a pattern.\n"
+            "Recursively searches through subdirectories.\n"
+            "Supports various filter options.",
+        .options =
+            "--hidden        Include hidden files in search\n"
+            "-e <ext>        Filter by file extension\n"
+            "-t <type>       Filter by type (f=file, d=directory)\n"
+            "pattern         Search pattern (required)\n"
+            "directory       Starting directory (optional, default: .)",
+        .examples =
+            "find test               Find files containing 'test'\n"
+            "find .c src/            Find .c files in src/\n"
+            "find --hidden .         Find all including hidden\n"
+            "find -t f pattern       Find only files\n"
+            "find -e rs src/         Find .rs files in src/"
+    },
+
     /* Sentinel - marks end of array */
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };

@@ -102,15 +102,15 @@ Output: 53
 ## PART 5: File Operations
 
 ### Step 19: Create a file
-Type: mytouch test.txt
+Type: touch test.txt
 This creates an empty file called test.txt.
 
 ### Step 20: List files
-Type: myls
+Type: ls
 You should see test.txt in the output.
 
 ### Step 21: Check file details
-Type: mystat test.txt
+Type: stat test.txt
 This shows file size, permissions, timestamps, etc.
 
 ### Step 22: Add content to file
@@ -118,24 +118,24 @@ Type: echo Hello, File! > test.txt
 This writes "Hello, File!" to test.txt.
 
 ### Step 23: View file contents
-Type: mycat test.txt
+Type: cat test.txt
 Output: Hello, File!
 
 ### Step 24: Append to file
 Type: echo More content >> test.txt
-Type: mycat test.txt
+Type: cat test.txt
 Output:
 Hello, File!
 More content
 
 ### Step 25: Copy the file
-Type: mycp test.txt backup.txt
-Type: myls
+Type: cp test.txt backup.txt
+Type: ls
 You should see both test.txt and backup.txt.
 
 ### Step 26: Remove files
-Type: myrm test.txt backup.txt
-Type: myls
+Type: rm test.txt backup.txt
+Type: ls
 The files are gone.
 
 ---
@@ -143,8 +143,8 @@ The files are gone.
 ## PART 6: Directory Operations
 
 ### Step 27: Create a directory
-Type: mymkdir my_project
-Type: myls
+Type: mkdir my_project
+Type: ls
 You should see my_project/ in the listing.
 
 ### Step 28: Change into the directory
@@ -153,9 +153,9 @@ Type: pwd
 You're now in the my_project directory.
 
 ### Step 29: Create files in the directory
-Type: mytouch main.c
-Type: mytouch header.h
-Type: myls
+Type: touch main.c
+Type: touch header.h
+Type: ls
 Output: main.c  header.h
 
 ### Step 30: Go back up
@@ -164,11 +164,11 @@ Type: pwd
 You're back in the parent directory.
 
 ### Step 31: Remove directory contents
-Type: myrm my_project/main.c my_project/header.h
+Type: rm my_project/main.c my_project/header.h
 
 ### Step 32: Remove the directory
-Type: myrmdir my_project
-Type: myls
+Type: rmdir my_project
+Type: ls
 The directory is gone.
 
 ---
@@ -182,41 +182,41 @@ Type: fi
 Output: Success!
 
 ### Step 34: If with command test
-Type: mytouch testfile.txt
-Type: if myls testfile.txt then
+Type: touch testfile.txt
+Type: if ls testfile.txt then
 Type: echo File exists
 Type: fi
 Output: File exists
 
 ### Step 35: If with variables
 Type: set FILE=testfile.txt
-Type: if mycat $FILE then
+Type: if cat $FILE then
 Type: echo Read successful
 Type: fi
 Output: (contents of testfile.txt)
 Read successful
 
 ### Step 36: Clean up
-Type: myrm testfile.txt
+Type: rm testfile.txt
 
 ---
 
 ## PART 8: Pipelines
 
 ### Step 37: Create test files
-Type: mytouch file1.c file2.c file3.txt
+Type: touch file1.c file2.c file3.txt
 
 ### Step 38: Simple pipeline
-Type: myls | myfd .c
+Type: ls | find .c
 Output: file1.c  file2.c
 (Only .c files are shown)
 
 ### Step 39: Pipeline with echo
-Type: echo Testing pipeline | mycat
+Type: echo Testing pipeline | cat
 Output: Testing pipeline
 
 ### Step 40: Clean up
-Type: myrm file1.c file2.c file3.txt
+Type: rm file1.c file2.c file3.txt
 
 ---
 
@@ -224,61 +224,61 @@ Type: myrm file1.c file2.c file3.txt
 
 ### Step 41: Redirect output
 Type: echo First line > output.txt
-Type: mycat output.txt
+Type: cat output.txt
 Output: First line
 
 ### Step 42: Append to file
 Type: echo Second line >> output.txt
 Type: echo Third line >> output.txt
-Type: mycat output.txt
+Type: cat output.txt
 Output:
 First line
 Second line
 Third line
 
 ### Step 43: Input redirection
-Type: mycat < output.txt
+Type: cat < output.txt
 Output:
 First line
 Second line
 Third line
 
 ### Step 44: Combine redirections
-Type: mycat < output.txt > copy.txt
-Type: mycat copy.txt
+Type: cat < output.txt > copy.txt
+Type: cat copy.txt
 Output:
 First line
 Second line
 Third line
 
 ### Step 45: Clean up
-Type: myrm output.txt copy.txt
+Type: rm output.txt copy.txt
 
 ---
 
 ## PART 10: Glob Patterns
 
 ### Step 46: Create test files
-Type: mytouch test1.txt test2.txt test3.txt data1.txt
+Type: touch test1.txt test2.txt test3.txt data1.txt
 
 ### Step 47: Match all .txt files
-Type: myls *.txt
+Type: ls *.txt
 Output: data1.txt  test1.txt  test2.txt  test3.txt
 
 ### Step 48: Match specific prefix
-Type: myls test*.txt
+Type: ls test*.txt
 Output: test1.txt  test2.txt  test3.txt
 
 ### Step 49: Single character wildcard
-Type: myls test?.txt
+Type: ls test?.txt
 Output: test1.txt  test2.txt  test3.txt
 
 ### Step 50: Character range
-Type: myls test[1-2].txt
+Type: ls test[1-2].txt
 Output: test1.txt  test2.txt
 
 ### Step 51: Clean up
-Type: myrm *.txt
+Type: rm *.txt
 
 ---
 
@@ -291,11 +291,11 @@ Type: echo Area: $((WIDTH * HEIGHT)) square units
 Output: Area: 150 square units
 
 ### Step 53: File processing workflow
-Type: mytouch data.txt
+Type: touch data.txt
 Type: echo Processing... > data.txt
 Type: echo Step 1 complete >> data.txt
 Type: echo Step 2 complete >> data.txt
-Type: if mycat data.txt then
+Type: if cat data.txt then
 Type: echo File processed successfully
 Type: fi
 Output:
@@ -304,16 +304,16 @@ Step 1 complete
 Step 2 complete
 File processed successfully
 
-Type: myrm data.txt
+Type: rm data.txt
 
 ### Step 54: Project setup
-Type: mymkdir project
+Type: mkdir project
 Type: cd project
-Type: mytouch main.c utils.c
-Type: myls *.c
+Type: touch main.c utils.c
+Type: ls *.c
 Type: cd ..
-Type: myrm project/*.c
-Type: myrmdir project
+Type: rm project/*.c
+Type: rmdir project
 
 ---
 
@@ -325,8 +325,8 @@ Congratulations! You've completed the ushell tutorial!
 ✓ Basic commands (echo, pwd)
 ✓ Variables (set, export, unset)
 ✓ Arithmetic expressions ($((expr)))
-✓ File operations (mycat, mycp, myrm, mytouch)
-✓ Directory operations (cd, mymkdir, myrmdir)
+✓ File operations (cat, cp, rm, touch)
+✓ Directory operations (cd, mkdir, rmdir)
 ✓ Conditionals (if/then/fi)
 ✓ Pipelines (cmd1 | cmd2)
 ✓ I/O redirection (<, >, >>)

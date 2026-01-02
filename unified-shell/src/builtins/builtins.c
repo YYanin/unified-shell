@@ -427,14 +427,7 @@ int builtin_help(char **argv, Env *env) {
     printf("  apt install PKG    Install a package\n");
     printf("  apt remove PKG     Remove a package\n");
     printf("\nIntegrated Tools:\n");
-    printf("  myls, mycat, mycp, mymv, myrm, mymkdir, myrmdir, mytouch, mystat, myfd\n");
-    printf("\nAI Integration:\n");
-    printf("  @<query>           Ask AI for command suggestions\n");
-    printf("                     Example: @list all python files\n");
-    printf("  Confirmation:      y = execute, n = cancel, e = edit suggestion\n");
-    printf("  Environment Vars:  OPENAI_API_KEY, USHELL_LLM_MODEL, USHELL_AI_HELPER,\n");
-    printf("                     USHELL_AI_DEBUG, USHELL_AI_CONTEXT\n");
-    printf("  See aiIntegr/README.md for detailed AI configuration\n");
+    printf("  ls, cat, cp, mv, rm, mkdir, rmdir, touch, stat, find\n");
     printf("\nFeatures:\n");
     printf("  - Variables: $VAR or ${VAR}\n");
     printf("  - Arithmetic: $((expression))\n");
@@ -980,16 +973,16 @@ int builtin_commands(char **argv, Env *env) {
         printf("    {\"name\": \"apt clean\", \"summary\": \"Clean cache\", \"description\": \"Clean package cache\", \"usage\": \"apt clean\", \"options\": []},\n");
         
         // Tool commands
-        printf("    {\"name\": \"myls\", \"summary\": \"List files\", \"description\": \"List directory contents\", \"usage\": \"myls [directory]\", \"options\": []},\n");
-        printf("    {\"name\": \"mycat\", \"summary\": \"Show file\", \"description\": \"Display file contents\", \"usage\": \"mycat <file>\", \"options\": []},\n");
-        printf("    {\"name\": \"mycp\", \"summary\": \"Copy files\", \"description\": \"Copy files or directories\", \"usage\": \"mycp <source> <dest>\", \"options\": []},\n");
-        printf("    {\"name\": \"mymv\", \"summary\": \"Move files\", \"description\": \"Move or rename files\", \"usage\": \"mymv <source> <dest>\", \"options\": []},\n");
-        printf("    {\"name\": \"myrm\", \"summary\": \"Remove files\", \"description\": \"Remove files or directories\", \"usage\": \"myrm <file>\", \"options\": []},\n");
-        printf("    {\"name\": \"mymkdir\", \"summary\": \"Make directory\", \"description\": \"Create directories\", \"usage\": \"mymkdir <directory>\", \"options\": []},\n");
-        printf("    {\"name\": \"myrmdir\", \"summary\": \"Remove directory\", \"description\": \"Remove empty directories\", \"usage\": \"myrmdir <directory>\", \"options\": []},\n");
-        printf("    {\"name\": \"mytouch\", \"summary\": \"Create file\", \"description\": \"Create empty file or update timestamp\", \"usage\": \"mytouch <file>\", \"options\": []},\n");
-        printf("    {\"name\": \"mystat\", \"summary\": \"File status\", \"description\": \"Display file status information\", \"usage\": \"mystat <file>\", \"options\": []},\n");
-        printf("    {\"name\": \"myfd\", \"summary\": \"Find files\", \"description\": \"Search for files by name\", \"usage\": \"myfd <pattern>\", \"options\": []}\n");
+        printf("    {\"name\": \"ls\", \"summary\": \"List files\", \"description\": \"List directory contents\", \"usage\": \"ls [directory]\", \"options\": []},\n");
+        printf("    {\"name\": \"cat\", \"summary\": \"Show file\", \"description\": \"Display file contents\", \"usage\": \"cat <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"cp\", \"summary\": \"Copy files\", \"description\": \"Copy files or directories\", \"usage\": \"cp <source> <dest>\", \"options\": []},\n");
+        printf("    {\"name\": \"mv\", \"summary\": \"Move files\", \"description\": \"Move or rename files\", \"usage\": \"mv <source> <dest>\", \"options\": []},\n");
+        printf("    {\"name\": \"rm\", \"summary\": \"Remove files\", \"description\": \"Remove files or directories\", \"usage\": \"rm <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"mkdir\", \"summary\": \"Make directory\", \"description\": \"Create directories\", \"usage\": \"mkdir <directory>\", \"options\": []},\n");
+        printf("    {\"name\": \"rmdir\", \"summary\": \"Remove directory\", \"description\": \"Remove empty directories\", \"usage\": \"rmdir <directory>\", \"options\": []},\n");
+        printf("    {\"name\": \"touch\", \"summary\": \"Create file\", \"description\": \"Create empty file or update timestamp\", \"usage\": \"touch <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"stat\", \"summary\": \"File status\", \"description\": \"Display file status information\", \"usage\": \"stat <file>\", \"options\": []},\n");
+        printf("    {\"name\": \"find\", \"summary\": \"Find files\", \"description\": \"Search for files by name\", \"usage\": \"find <pattern>\", \"options\": []}\n");
         
         printf("  ]\n");
         printf("}\n");
@@ -1024,16 +1017,16 @@ int builtin_commands(char **argv, Env *env) {
         printf("  apt depends - Show dependencies\n");
         printf("  apt clean   - Clean cache\n");
         printf("\nTool Commands:\n");
-        printf("  myls        - List files\n");
-        printf("  mycat       - Show file\n");
-        printf("  mycp        - Copy files\n");
-        printf("  mymv        - Move files\n");
-        printf("  myrm        - Remove files\n");
-        printf("  mymkdir     - Make directory\n");
-        printf("  myrmdir     - Remove directory\n");
-        printf("  mytouch     - Create file\n");
-        printf("  mystat      - File status\n");
-        printf("  myfd        - Find files\n");
+        printf("  ls          - List files\n");
+        printf("  cat         - Show file\n");
+        printf("  cp          - Copy files\n");
+        printf("  mv          - Move files\n");
+        printf("  rm          - Remove files\n");
+        printf("  mkdir       - Make directory\n");
+        printf("  rmdir       - Remove directory\n");
+        printf("  touch       - Create file\n");
+        printf("  stat        - File status\n");
+        printf("  find        - Find files\n");
     }
     
     return 0;

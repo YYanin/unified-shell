@@ -15,20 +15,20 @@ echo
 echo "=== Example 1: Data Processing Pipeline ==="
 echo "Creating sample data files..."
 
-mytouch data1.txt data2.txt data3.txt
+touch data1.txt data2.txt data3.txt
 echo "Dataset A: 100 records" > data1.txt
 echo "Dataset B: 250 records" > data2.txt
 echo "Dataset C: 175 records" > data3.txt
 
 echo "Processing all data files..."
-myls *.txt | myfd data
+ls *.txt | find data
 
 echo "Combining data..."
-mycat data1.txt data2.txt data3.txt > combined.txt
-mycat combined.txt
+cat data1.txt data2.txt data3.txt > combined.txt
+cat combined.txt
 
 echo "Cleaning up..."
-myrm data*.txt combined.txt
+rm data*.txt combined.txt
 echo "Example 1 complete!"
 echo
 
@@ -39,25 +39,25 @@ echo
 echo "=== Example 2: Conditional File Management ==="
 echo "Creating backup system..."
 
-mymkdir backup
-mytouch important.txt
+mkdir backup
+touch important.txt
 echo "Critical data" > important.txt
 
-if myls important.txt then
+if ls important.txt then
     echo File found, creating backup...
-    mycp important.txt backup/important_backup.txt
+    cp important.txt backup/important_backup.txt
     echo Backup created successfully
 fi
 
-if myls backup/important_backup.txt then
+if ls backup/important_backup.txt then
     echo Verifying backup...
-    mycat backup/important_backup.txt
+    cat backup/important_backup.txt
     echo Backup verified!
 fi
 
 echo "Cleaning up..."
-myrm important.txt backup/important_backup.txt
-myrmdir backup
+rm important.txt backup/important_backup.txt
+rmdir backup
 echo "Example 2 complete!"
 echo
 
@@ -103,24 +103,24 @@ echo
 echo "=== Example 4: Multi-Level Directory Structure ==="
 echo "Creating project structure..."
 
-mymkdir project
+mkdir project
 cd project
-mymkdir src include tests docs
+mkdir src include tests docs
 
 echo "Creating source files..."
-mytouch src/main.c src/utils.c
-mytouch include/header.h
-mytouch tests/test_main.c
-mytouch docs/README.txt
+touch src/main.c src/utils.c
+touch include/header.h
+touch tests/test_main.c
+touch docs/README.txt
 
 echo "Project structure:"
-myls
+ls
 echo
 echo "Source files:"
-myls src
+ls src
 echo
 echo "Include files:"
-myls include
+ls include
 
 echo "Navigating structure..."
 cd src
@@ -130,12 +130,12 @@ pwd
 cd ../..
 
 echo "Cleaning up..."
-myrm project/src/main.c project/src/utils.c
-myrm project/include/header.h
-myrm project/tests/test_main.c
-myrm project/docs/README.txt
-myrmdir project/src project/include project/tests project/docs
-myrmdir project
+rm project/src/main.c project/src/utils.c
+rm project/include/header.h
+rm project/tests/test_main.c
+rm project/docs/README.txt
+rmdir project/src project/include project/tests project/docs
+rmdir project
 echo "Example 4 complete!"
 echo
 
@@ -163,9 +163,9 @@ echo "Source: $SRC_DIR"
 echo "Binary: $BIN_DIR"
 
 echo "Creating release package..."
-mytouch ${RELEASE_NAME}.tar.gz
-myls ${RELEASE_NAME}.tar.gz
-myrm ${RELEASE_NAME}.tar.gz
+touch ${RELEASE_NAME}.tar.gz
+ls ${RELEASE_NAME}.tar.gz
+rm ${RELEASE_NAME}.tar.gz
 echo "Example 5 complete!"
 echo
 
@@ -176,37 +176,37 @@ echo
 echo "=== Example 6: Pattern Matching & Filtering ==="
 echo "Creating various file types..."
 
-mytouch app.c app.h app.o
-mytouch utils.c utils.h utils.o
-mytouch main.c main.o
-mytouch test.c test.o
+touch app.c app.h app.o
+touch utils.c utils.h utils.o
+touch main.c main.o
+touch test.c test.o
 
 echo "All files:"
-myls
+ls
 
 echo "Source files only (*.c):"
-myls *.c
+ls *.c
 
 echo "Header files only (*.h):"
-myls *.h
+ls *.h
 
 echo "Object files only (*.o):"
-myls *.o
+ls *.o
 
 echo "Files starting with 'app':"
-myls app*
+ls app*
 
 echo "Files starting with 'a' or 'u':"
-myls [au]*
+ls [au]*
 
 echo "Cleaning up all object files..."
-myrm *.o
+rm *.o
 
 echo "Remaining files:"
-myls *.c *.h
+ls *.c *.h
 
 echo "Final cleanup..."
-myrm *.c *.h
+rm *.c *.h
 echo "Example 6 complete!"
 echo
 
@@ -217,27 +217,27 @@ echo
 echo "=== Example 7: Nested Conditionals & Logic ==="
 echo "File validation system..."
 
-mytouch config.txt
+touch config.txt
 echo "config_value=123" > config.txt
 
-if myls config.txt then
+if ls config.txt then
     echo Configuration file found
-    if mycat config.txt then
+    if cat config.txt then
         echo Configuration file readable
         echo Contents verified
     fi
 fi
 
 echo "Creating log file..."
-mytouch app.log
+touch app.log
 echo "Application started" > app.log
 
-if myls app.log then
+if ls app.log then
     echo Log file exists
-    mycat app.log
+    cat app.log
 fi
 
-myrm config.txt app.log
+rm config.txt app.log
 echo "Example 7 complete!"
 echo
 
@@ -249,8 +249,8 @@ echo "=== Example 8: Batch File Operations ==="
 echo "Processing multiple files..."
 
 echo "Creating test dataset..."
-mytouch test_001.dat test_002.dat test_003.dat
-mytouch test_004.dat test_005.dat
+touch test_001.dat test_002.dat test_003.dat
+touch test_004.dat test_005.dat
 echo "Data chunk 1" > test_001.dat
 echo "Data chunk 2" > test_002.dat
 echo "Data chunk 3" > test_003.dat
@@ -258,21 +258,21 @@ echo "Data chunk 4" > test_004.dat
 echo "Data chunk 5" > test_005.dat
 
 echo "All data files:"
-myls test_*.dat
+ls test_*.dat
 
 echo "Processing files with pattern matching..."
-myls test_00[1-3].dat
+ls test_00[1-3].dat
 
 echo "Creating backup copies..."
-mycp test_001.dat backup_001.dat
-mycp test_002.dat backup_002.dat
-mycp test_003.dat backup_003.dat
+cp test_001.dat backup_001.dat
+cp test_002.dat backup_002.dat
+cp test_003.dat backup_003.dat
 
 echo "Verifying backups..."
-myls backup_*.dat
+ls backup_*.dat
 
 echo "Cleaning up..."
-myrm test_*.dat backup_*.dat
+rm test_*.dat backup_*.dat
 echo "Example 8 complete!"
 echo
 
@@ -283,7 +283,7 @@ echo
 echo "=== Example 9: Report Generation ==="
 echo "Building system report..."
 
-mytouch report.txt
+touch report.txt
 echo "System Report" > report.txt
 echo "=============" >> report.txt
 echo >> report.txt
@@ -306,9 +306,9 @@ echo >> report.txt
 echo "Report generated!" >> report.txt
 
 echo "Final report:"
-mycat report.txt
+cat report.txt
 
-myrm report.txt
+rm report.txt
 echo "Example 9 complete!"
 echo
 
@@ -319,20 +319,20 @@ echo
 echo "=== Example 10: Complex Pipeline Workflow ==="
 echo "Setting up data processing pipeline..."
 
-mytouch raw_data.txt processed_data.txt
+touch raw_data.txt processed_data.txt
 echo "raw_001.dat" > raw_data.txt
 echo "raw_002.dat" >> raw_data.txt
 echo "raw_003.dat" >> raw_data.txt
 
 echo "Pipeline stage 1: List and filter"
-mycat raw_data.txt | myfd raw
+cat raw_data.txt | find raw
 
 echo "Pipeline stage 2: Create processed data"
 echo "Processed output" > processed_data.txt
-mycat processed_data.txt
+cat processed_data.txt
 
 echo "Cleaning up pipeline..."
-myrm raw_data.txt processed_data.txt
+rm raw_data.txt processed_data.txt
 echo "Example 10 complete!"
 echo
 

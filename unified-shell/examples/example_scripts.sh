@@ -72,14 +72,14 @@ echo
 # ============================================
 
 echo "=== File Operations ==="
-mytouch example1.txt
-mytouch example2.txt
-myls example*.txt
+touch example1.txt
+touch example2.txt
+ls example*.txt
 echo "Test content" > example1.txt
-mycat example1.txt
-mycp example1.txt example_backup.txt
-mycat example_backup.txt
-myrm example*.txt example_backup.txt
+cat example1.txt
+cp example1.txt example_backup.txt
+cat example_backup.txt
+rm example*.txt example_backup.txt
 echo
 
 # ============================================
@@ -87,12 +87,12 @@ echo
 # ============================================
 
 echo "=== Directory Operations ==="
-mymkdir test_dir
-myls test_dir
+mkdir test_dir
+ls test_dir
 cd test_dir
 pwd
 cd ..
-myrmdir test_dir
+rmdir test_dir
 echo
 
 # ============================================
@@ -100,15 +100,15 @@ echo
 # ============================================
 
 echo "=== Conditionals ==="
-if mytouch test_cond.txt then
+if touch test_cond.txt then
     echo File created successfully
 fi
 
-if myls test_cond.txt then
+if ls test_cond.txt then
     echo File exists
 fi
 
-myrm test_cond.txt
+rm test_cond.txt
 echo
 
 # ============================================
@@ -117,9 +117,9 @@ echo
 
 echo "=== Pipelines ==="
 echo Creating test files for pipeline demo
-mytouch file1.c file2.c file3.txt
-myls | myfd .c
-myrm file*.c file*.txt
+touch file1.c file2.c file3.txt
+ls | find .c
+rm file*.c file*.txt
 echo
 
 # ============================================
@@ -130,9 +130,9 @@ echo "=== I/O Redirection ==="
 echo "Line 1" > output.txt
 echo "Line 2" >> output.txt
 echo "Line 3" >> output.txt
-mycat output.txt
-mycat < output.txt
-myrm output.txt
+cat output.txt
+cat < output.txt
+rm output.txt
 echo
 
 # ============================================
@@ -140,14 +140,14 @@ echo
 # ============================================
 
 echo "=== Glob Patterns ==="
-mytouch test1.txt test2.txt test3.txt data1.txt data2.txt
+touch test1.txt test2.txt test3.txt data1.txt data2.txt
 echo All .txt files:
-myls *.txt
+ls *.txt
 echo Files starting with 'test':
-myls test*.txt
+ls test*.txt
 echo Files matching test[0-9].txt:
-myls test[0-9].txt
-myrm test*.txt data*.txt
+ls test[0-9].txt
+rm test*.txt data*.txt
 echo
 
 # ============================================
@@ -155,12 +155,12 @@ echo
 # ============================================
 
 echo "=== Complex Example 1: File Processing ==="
-mytouch data.txt
+touch data.txt
 echo "Processing data..." > data.txt
 echo "Step 1: Complete" >> data.txt
 echo "Step 2: Complete" >> data.txt
-mycat data.txt
-myrm data.txt
+cat data.txt
+rm data.txt
 echo
 
 echo "=== Complex Example 2: Variables + Arithmetic ==="
@@ -172,13 +172,13 @@ echo Area: $AREA square units
 echo
 
 echo "=== Complex Example 3: Multiple Operations ==="
-mymkdir workspace
+mkdir workspace
 cd workspace
-mytouch project.c project.h
-myls
+touch project.c project.h
+ls
 cd ..
-myrm workspace/project.c workspace/project.h
-myrmdir workspace
+rm workspace/project.c workspace/project.h
+rmdir workspace
 echo
 
 # ============================================

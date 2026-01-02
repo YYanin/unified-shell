@@ -10,16 +10,16 @@
  */
 
 // Tool main function declarations
-int tool_myls_main(int argc, char **argv);
-int tool_mycat_main(int argc, char **argv);
-int tool_mycp_main(int argc, char **argv);
-int tool_mymv_main(int argc, char **argv);
-int tool_myrm_main(int argc, char **argv);
-int tool_mymkdir_main(int argc, char **argv);
-int tool_myrmdir_main(int argc, char **argv);
-int tool_mytouch_main(int argc, char **argv);
-int tool_mystat_main(int argc, char **argv);
-int tool_myfd_main(int argc, char **argv);
+int tool_ls_main(int argc, char **argv);
+int tool_cat_main(int argc, char **argv);
+int tool_cp_main(int argc, char **argv);
+int tool_mv_main(int argc, char **argv);
+int tool_rm_main(int argc, char **argv);
+int tool_mkdir_main(int argc, char **argv);
+int tool_rmdir_main(int argc, char **argv);
+int tool_touch_main(int argc, char **argv);
+int tool_stat_main(int argc, char **argv);
+int tool_find_main(int argc, char **argv);
 
 // Tool dispatch system
 typedef int (*tool_func)(int argc, char **argv);
