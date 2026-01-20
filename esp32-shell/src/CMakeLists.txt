@@ -13,6 +13,7 @@ idf_component_register(
         "vfs_esp32.c"
         "executor_esp32.c"
         "terminal_esp32.c"
+        "parser_esp32.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 

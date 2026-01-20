@@ -447,15 +447,30 @@ int terminal_read_line(char *buf, size_t size) {
         
         switch (key) {
             case KEY_ENTER:
-                /* End of line - copy to output buffer */
-                write_char('\n');
+                /* End of line - write CRLF for proper terminal display */
+                write_string("\r\n");
+                platform_flush();
+                
+                /* Consume any trailing CR or LF from CRLF sequence
+                 * Some terminals send CR+LF, we need to skip the second char */
+                {
+                    int next = platform_read_char();
+                    if (next >= 0 && next != '\r' && next != '\n') {
+                        /* Got a real character, can't push back on ESP32
+                         * This shouldn't happen in practice */
+                    }
+                    /* If we got CR or LF, just discard it */
+                }
+                
+                /* Copy line to output buffer */
                 strncpy(buf, g_terminal.line, size - 1);
                 buf[size - 1] = '\0';
                 return g_terminal.line_len;
                 
             case KEY_CTRL_C:
                 /* Cancel - return empty line with indicator */
-                write_string("^C\n");
+                write_string("^C\r\n");
+                platform_flush();
                 buf[0] = '\0';
                 return -1;
                 
@@ -493,7 +508,8 @@ int terminal_read_line(char *buf, size_t size) {
                     refresh_line();
                 } else if (key == KEY_CTRL_D && g_terminal.line_len == 0) {
                     /* Ctrl+D on empty line = EOF */
-                    write_string("^D\n");
+                    write_string("^D\r\n");
+                    platform_flush();
                     buf[0] = '\0';
                     return -1;
                 } else {

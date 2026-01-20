@@ -86,6 +86,18 @@ int execute_with_redirection(parsed_cmd_t *cmd,
 int has_pipeline(int argc, char **argv);
 
 /**
+ * @brief Check if background operator (&) exists in command
+ * 
+ * ESP32 does not support background processes because there's no
+ * fork() system call. This function detects & to give a helpful error.
+ * 
+ * @param argc Argument count
+ * @param argv Argument array
+ * @return 1 if background operator found, 0 otherwise
+ */
+int has_background(int argc, char **argv);
+
+/**
  * @brief Get the current redirection output file
  * 
  * Commands can use this to write directly to the redirection

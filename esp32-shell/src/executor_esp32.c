@@ -132,6 +132,30 @@ int has_pipeline(int argc, char **argv) {
     return 0;
 }
 
+/**
+ * @brief Check if background operator (&) exists in command
+ * 
+ * Detects trailing & or & as separate argument.
+ * ESP32 cannot support background processes.
+ */
+int has_background(int argc, char **argv) {
+    if (argc == 0) return 0;
+    
+    /* Check if last argument is & */
+    if (strcmp(argv[argc - 1], "&") == 0) {
+        return 1;
+    }
+    
+    /* Check if last argument ends with & */
+    const char *last = argv[argc - 1];
+    size_t len = strlen(last);
+    if (len > 0 && last[len - 1] == '&') {
+        return 1;
+    }
+    
+    return 0;
+}
+
 /* ============================================================================
  * Output Capture for Redirection
  * ============================================================================ */

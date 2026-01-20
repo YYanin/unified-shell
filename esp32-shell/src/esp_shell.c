@@ -25,6 +25,7 @@
 #include "shell_vfs.h"
 #include "executor_esp32.h"
 #include "terminal_esp32.h"
+#include "parser_esp32.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -69,6 +70,12 @@ static int cmd_touch(int argc, char **argv);
 static int cmd_rm(int argc, char **argv);
 static int cmd_mkdir(int argc, char **argv);
 static int cmd_history(int argc, char **argv);
+static int cmd_set(int argc, char **argv);
+static int cmd_unset(int argc, char **argv);
+static int cmd_env(int argc, char **argv);
+static int cmd_jobs(int argc, char **argv);
+static int cmd_fg(int argc, char **argv);
+static int cmd_bg(int argc, char **argv);
 
 /* ============================================================================
  * Built-in Command Table
@@ -100,6 +107,16 @@ static const esp_shell_cmd_t builtin_commands[] = {
     
     /* Shell history */
     {"history", "Show command history",          cmd_history},
+    
+    /* Environment variables */
+    {"set",     "Set environment variable",      cmd_set},
+    {"unset",   "Remove environment variable",   cmd_unset},
+    {"env",     "List environment variables",    cmd_env},
+    
+    /* Unavailable features (show helpful error) */
+    {"jobs",    "List background jobs (N/A)",    cmd_jobs},
+    {"fg",      "Foreground job (N/A)",          cmd_fg},
+    {"bg",      "Background job (N/A)",          cmd_bg},
     
     /* End of command list marker */
     {NULL, NULL, NULL}
@@ -141,6 +158,11 @@ static char* build_path(const char *path, char *buf, size_t size) {
     return buf;
 }
 
+/*
+ * NOTE: parse_line is kept for backwards compatibility but is no longer used.
+ * The parser_esp32 module now handles command parsing with variable expansion.
+ */
+#if 0  /* Disabled - replaced by parser_parse_line() */
 /**
  * @brief Parse command line into argc/argv
  * 
@@ -189,6 +211,7 @@ static int parse_line(char *line, char **argv, int max_args) {
     
     return argc;
 }
+#endif  /* Disabled parse_line */
 
 /**
  * @brief Find command in command table
@@ -239,13 +262,18 @@ static int cmd_help(int argc, char **argv) {
     (void)argc;
     (void)argv;
     
-    printf("Available commands:\n");
-    printf("------------------\n");
+    printf("ESP32 Shell - Available commands:\n");
+    printf("---------------------------------\n");
     for (int i = 0; builtin_commands[i].name != NULL; i++) {
         printf("  %-10s - %s\n", 
                builtin_commands[i].name, 
                builtin_commands[i].help);
     }
+    printf("\nNote: This is a simplified shell for ESP32.\n");
+    printf("Features not available:\n");
+    printf("  - Pipelines (cmd1 | cmd2)\n");
+    printf("  - Background processes (cmd &)\n");
+    printf("  - External commands\n");
     printf("\n");
     return 0;
 }
@@ -566,6 +594,146 @@ static int cmd_history(int argc, char **argv) {
     return 0;
 }
 
+/**
+ * @brief set command - Set an environment variable
+ * 
+ * Usage: set NAME=value
+ *    or: set NAME value
+ * 
+ * Sets the variable NAME to the given value.
+ * Variables can be referenced as $NAME or ${NAME} in commands.
+ */
+static int cmd_set(int argc, char **argv) {
+    if (argc < 2) {
+        /* No arguments - show all variables (same as env) */
+        return cmd_env(argc, argv);
+    }
+    
+    /* Check for NAME=value format in first argument */
+    char name[PARSER_MAX_VAR_NAME];
+    char value[PARSER_MAX_VAR_VALUE];
+    
+    if (parser_is_assignment(argv[1], name, value)) {
+        /* NAME=value format */
+        if (parser_setvar(name, value) != 0) {
+            redir_printf("set: too many variables or name/value too long\n");
+            return 1;
+        }
+        return 0;
+    }
+    
+    /* Check for "set NAME value" format */
+    if (argc >= 3) {
+        if (strlen(argv[1]) >= PARSER_MAX_VAR_NAME) {
+            redir_printf("set: variable name too long\n");
+            return 1;
+        }
+        if (strlen(argv[2]) >= PARSER_MAX_VAR_VALUE) {
+            redir_printf("set: value too long\n");
+            return 1;
+        }
+        if (parser_setvar(argv[1], argv[2]) != 0) {
+            redir_printf("set: too many variables\n");
+            return 1;
+        }
+        return 0;
+    }
+    
+    redir_printf("Usage: set NAME=value\n");
+    redir_printf("   or: set NAME value\n");
+    return 1;
+}
+
+/**
+ * @brief unset command - Remove an environment variable
+ * 
+ * Usage: unset NAME
+ */
+static int cmd_unset(int argc, char **argv) {
+    if (argc < 2) {
+        redir_printf("Usage: unset NAME\n");
+        return 1;
+    }
+    
+    if (parser_unsetvar(argv[1]) != 0) {
+        redir_printf("unset: variable '%s' not found\n", argv[1]);
+        return 1;
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief Callback for env command to print variables
+ */
+static void env_print_callback(const char *name, const char *value, void *user_data) {
+    (void)user_data;
+    redir_printf("%s=%s\n", name, value);
+}
+
+/**
+ * @brief env command - List all environment variables
+ * 
+ * Usage: env
+ */
+static int cmd_env(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+    
+    int count = parser_var_count();
+    if (count == 0) {
+        redir_printf("No environment variables defined.\n");
+        return 0;
+    }
+    
+    parser_list_vars(env_print_callback, NULL);
+    return 0;
+}
+
+/* ============================================================================
+ * Unavailable Feature Stubs
+ * 
+ * These commands exist on Linux but are not available on ESP32 due to
+ * hardware/OS limitations (no fork(), no POSIX signals, etc).
+ * They provide helpful error messages instead of "command not found".
+ * ============================================================================ */
+
+/**
+ * @brief jobs command stub - Not available on ESP32
+ * 
+ * ESP32 runs on FreeRTOS without fork() so background jobs are not possible.
+ */
+static int cmd_jobs(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+    printf("jobs: not available on ESP32\n");
+    printf("  ESP32 does not support background processes (no fork).\n");
+    printf("  All commands run in the foreground.\n");
+    return 1;
+}
+
+/**
+ * @brief fg command stub - Not available on ESP32
+ */
+static int cmd_fg(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+    printf("fg: not available on ESP32\n");
+    printf("  No background jobs to bring to foreground.\n");
+    return 1;
+}
+
+/**
+ * @brief bg command stub - Not available on ESP32
+ */
+static int cmd_bg(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+    printf("bg: not available on ESP32\n");
+    printf("  ESP32 does not support background processes.\n");
+    return 1;
+}
+
 /* ============================================================================
  * Shell Public API Implementation
  * ============================================================================ */
@@ -577,6 +745,9 @@ static int cmd_history(int argc, char **argv) {
  */
 int esp_shell_init(void) {
     ESP_LOGI(TAG, "Initializing shell...");
+    
+    /* Initialize the command parser and variable system */
+    parser_init();
     
     /* Clear history */
     memset(history, 0, sizeof(history));
@@ -611,49 +782,80 @@ int esp_shell_init(void) {
  * - >> file : Redirect stdout to file (append)
  * - < file  : (Not yet implemented) Redirect stdin from file
  * - |       : (Not supported) Pipelines not available on ESP32
+ * 
+ * Variable expansion is performed by the parser:
+ * - $VAR expands to the value of VAR
+ * - ${VAR} expands to the value of VAR
  */
 int esp_shell_execute(const char *cmdline) {
-    /* Copy to local buffer since we modify it */
-    char line[ESP_SHELL_MAX_LINE_LEN];
-    strncpy(line, cmdline, sizeof(line) - 1);
-    line[sizeof(line) - 1] = '\0';
+    /* Use the enhanced parser with variable expansion */
+    parser_result_t result;
+    parser_error_t err = parser_parse_line(cmdline, &result);
     
-    /* Parse into argc/argv */
-    char *argv[ESP_SHELL_MAX_ARGS];
-    int argc = parse_line(line, argv, ESP_SHELL_MAX_ARGS);
-    
-    if (argc == 0) {
-        return 0;  /* Empty line */
+    /* Handle parser errors */
+    if (err == PARSER_ERR_EMPTY) {
+        return 0;  /* Empty line - not an error */
     }
     
-    /* Check for unsupported pipeline operator */
-    if (has_pipeline(argc, argv)) {
-        printf("error: pipelines not supported on ESP32\n");
+    if (err != PARSER_OK) {
+        printf("parse error: %s\n", parser_error_string(err));
         return 1;
     }
     
-    /* Parse I/O redirection operators */
-    parsed_cmd_t cmd;
-    if (parse_redirections(argc, argv, &cmd) != 0) {
-        return 1;  /* Syntax error already printed */
+    /* Check for unsupported pipeline operator */
+    if (has_pipeline(result.argc, result.argv)) {
+        printf("error: pipelines not supported on ESP32\n");
+        parser_free_result(&result);
+        return 1;
     }
+    
+    /* Check for unsupported background operator (&) */
+    if (has_background(result.argc, result.argv)) {
+        printf("error: background processes (&) not supported on ESP32\n");
+        printf("  ESP32 runs on FreeRTOS without fork() support.\n");
+        parser_free_result(&result);
+        return 1;
+    }
+    
+    /* Build a parsed_cmd_t from the parser result */
+    parsed_cmd_t cmd;
+    cmd.argc = result.argc;
+    /* Point directly to parser's argv array - it remains valid until parser_free_result */
+    cmd.argv = result.argv;
+    /* Cast redir type since parser uses int, executor uses redir_type_t */
+    cmd.stdout_redir = (redir_type_t)result.stdout_redir;
+    cmd.stdin_redir = (redir_type_t)result.stdin_redir;
+    /* Cast away const - the executor doesn't modify these */
+    cmd.stdout_file = (char *)result.stdout_file;
+    cmd.stdin_file = (char *)result.stdin_file;
     
     /* Find the command */
     const esp_shell_cmd_t *builtin = find_command(cmd.argv[0]);
     if (builtin == NULL) {
         printf("%s: command not found\n", cmd.argv[0]);
+        parser_free_result(&result);
         return 127;
     }
     
     /* Execute with redirection support */
+    int ret;
     if (cmd.stdout_redir != REDIR_NONE || cmd.stdin_redir != REDIR_NONE) {
-        return execute_with_redirection(&cmd, builtin->func);
+        ret = execute_with_redirection(&cmd, builtin->func);
+    } else {
+        /* No redirection - execute directly */
+        ret = builtin->func(cmd.argc, cmd.argv);
     }
     
-    /* No redirection - execute directly */
-    return builtin->func(cmd.argc, cmd.argv);
+    parser_free_result(&result);
+    return ret;
 }
 
+/*
+ * NOTE: read_line is kept for backwards compatibility but is no longer used.
+ * The terminal_esp32 module now provides terminal_read_line() with
+ * enhanced line editing (arrow keys, history navigation, etc).
+ */
+#if 0  /* Disabled - replaced by terminal_read_line() */
 /**
  * @brief Read a line of input from the console
  * 
@@ -709,6 +911,7 @@ static int read_line(char *buf, size_t size) {
     buf[pos] = '\0';
     return pos;
 }
+#endif  /* Disabled read_line */
 
 /**
  * @brief Run the shell main loop

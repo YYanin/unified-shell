@@ -11214,3 +11214,109 @@ Implemented full terminal handling for ESP32 serial console per ESP32_Prompts.md
 
 ---
 ' >> /home/yyanin/Documents/coding/unified-shell/AI_Interaction.md
+---
+
+## Prompt 4.4: Simplify Parser for Embedded Use
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Files Created
+
+1. **parser_esp32.h** (267 lines)
+   - Parser configuration with memory limits (PARSER_MAX_LINE_LEN=256, PARSER_MAX_ARGS=32, PARSER_MAX_VARS=32)
+   - Error codes enum (parser_error_t)
+   - parser_result_t structure for parsed commands with redirection
+   - parser_var_t for environment variable storage
+   - Function prototypes for parsing and variable management
+
+2. **parser_esp32.c** (655 lines)
+   - Static variable storage (g_vars[] array)
+   - parser_init() - Initialize parser and clear variables
+   - parser_parse_line() - Parse with variable expansion, quotes, comments, redirections
+   - parser_expand_vars() - Replace $VAR and ${VAR} with values
+   - parser_setvar/getvar/unsetvar() - Variable management
+   - parser_is_assignment() - Check for NAME=value syntax
+   - parser_list_vars() - Enumerate all variables via callback
+
+### Files Modified
+
+1. **CMakeLists.txt** - Added parser_esp32.c to SRCS
+2. **esp_shell.c**
+   - Added #include "parser_esp32.h"
+   - Added parser_init() call in esp_shell_init()
+   - Modified esp_shell_execute() to use parser_parse_line() with variable expansion
+   - Added cmd_set, cmd_unset, cmd_env commands (set/unset/env builtins)
+   - Disabled unused parse_line() and read_line() with #if 0 blocks
+
+### Build Results
+
+RAM:   7.5% (24,648 / 327,680 bytes)
+Flash: 16.4% (258,379 / 1,572,864 bytes)
+Build: SUCCESS
+
+### Features Implemented
+
+- Variable expansion: $VAR and ${VAR} syntax
+- Quote handling: single and double quotes
+- Comment removal: # to end of line
+- I/O redirection: >, >>, < operators
+- Memory bounds checking throughout
+- Static buffers only (no malloc)
+- set/unset/env commands for variable management
+
+### Manual Tests (to verify on hardware)
+
+- set NAME=ESP32; echo Hello $NAME -> "Hello ESP32"
+- echo "Quoted string with spaces"
+- set FOO bar; echo ${FOO}test -> "bartest"
+- env (shows all variables)
+- unset NAME
+
+
+---
+
+## Prompt 4.5: Remove or Adapt Complex Features
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Changes Made
+
+1. **Added background operator detection**
+   - executor_esp32.h: Added has_background() declaration
+   - executor_esp32.c: Implemented has_background() to detect trailing &
+   - esp_shell.c: Added check in esp_shell_execute() with error message
+
+2. **Added stub commands for unavailable features**
+   - jobs: Returns error "not available on ESP32" with explanation
+   - fg: Returns error "not available on ESP32"
+   - bg: Returns error "not available on ESP32"
+
+3. **Updated help command**
+   - Shows "ESP32 Shell" title
+   - Lists unavailable features (pipelines, background processes, external commands)
+
+### Already Completed (from previous prompts)
+
+- Job Control: No fork(), no background processes (has_pipeline check existed)
+- Signals: Ctrl+C handled via terminal_esp32 module
+- History: Limited to 10 entries (ESP_SHELL_HISTORY_SIZE=10)
+- APT: Not included (not needed for embedded)
+- Environment Variables: Limited to 32 vars, 128 char values (parser_esp32)
+- EDI editor: Not included
+
+### Build Results
+
+RAM:   7.5% (24,648 / 327,680 bytes)
+Flash: 16.5% (259,295 / 1,572,864 bytes)
+Build: SUCCESS
+
+### Manual Tests (to verify on hardware)
+
+- jobs -> "jobs: not available on ESP32"
+- fg -> "fg: not available on ESP32"
+- bg -> "bg: not available on ESP32"
+- sleep 5 & -> "error: background processes (&) not supported on ESP32"
+- help -> Shows available commands with limitations note
+
