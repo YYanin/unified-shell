@@ -82,9 +82,6 @@ static int cmd_gpio(int argc, char **argv);
 static int cmd_format(int argc, char **argv);
 static int cmd_fsinfo(int argc, char **argv);
 
-/* External command - edi text editor */
-extern int cmd_edi(int argc, char **argv);
-
 /* ============================================================================
  * Built-in Command Table
  * ============================================================================ */
@@ -117,9 +114,6 @@ static const esp_shell_cmd_t builtin_commands[] = {
     /* Filesystem management */
     {"fsinfo",  "Show filesystem info",          cmd_fsinfo},
     {"format",  "Format the filesystem",         cmd_format},
-    
-    /* Text editor */
-    {"edi",     "Vi-like text editor",           cmd_edi},
     
     /* Shell history */
     {"history", "Show command history",          cmd_history},
@@ -627,13 +621,97 @@ static int cmd_ls(int argc, char **argv) {
 }
 
 /**
- * @brief cat command - Display file contents
+ * @brief cat command - Display file contents or write to file
  * 
- * Uses VFS abstraction layer for portable file reading.
+ * Usage:
+ *   cat <file>          - Display file contents
+ *   cat >file            - Write stdin lines to file (overwrite)
+ *   cat >>file           - Append stdin lines to file
+ * 
+ * In write mode, type lines and press Enter. End input with Ctrl+D or empty line.
+ * Uses VFS abstraction layer for portable file operations.
  */
 static int cmd_cat(int argc, char **argv) {
+    /* Check for write mode: cat >file or cat >>file */
+    if (argc >= 2 && argv[1][0] == '>') {
+        const char *mode = "w";  /* Default: overwrite */
+        const char *filename = argv[1] + 1;  /* Skip first '>' */
+        
+        /* Check for append mode (>>) */
+        if (argv[1][1] == '>') {
+            mode = "a";
+            filename = argv[1] + 2;  /* Skip ">>" */
+        }
+        
+        /* Handle "cat > file" (space between > and filename) */
+        if (*filename == '\0' && argc >= 3) {
+            filename = argv[2];
+        }
+        
+        if (*filename == '\0') {
+            printf("Usage: cat >file or cat >>file\n");
+            return 1;
+        }
+        
+        char path[ESP_SHELL_MAX_PATH];
+        if (build_path(filename, path, sizeof(path)) == NULL) {
+            printf("cat: path too long\n");
+            return 1;
+        }
+        
+        vfs_file_t f = vfs_open(path, mode);
+        if (f == NULL) {
+            printf("cat: cannot open '%s' for writing\n", filename);
+            return 1;
+        }
+        
+        /* Read lines from stdin until empty line or Ctrl+D */
+        printf("Enter text (empty line or Ctrl+D to finish):\n");
+        char line[256];
+        while (1) {
+            int c;
+            int i = 0;
+            
+            /* Read a line character by character */
+            while (i < (int)sizeof(line) - 1) {
+                c = getchar();
+                if (c == EOF || c == 4) {  /* EOF or Ctrl+D */
+                    if (i == 0) goto done;  /* Empty input, finish */
+                    break;
+                }
+                if (c == '\r' || c == '\n') {
+                    break;
+                }
+                if (c == 0x7f || c == 0x08) {  /* Backspace */
+                    if (i > 0) {
+                        i--;
+                        printf("\b \b");  /* Erase character on screen */
+                    }
+                    continue;
+                }
+                line[i++] = c;
+                putchar(c);  /* Echo */
+            }
+            printf("\n");
+            line[i] = '\0';
+            
+            /* Empty line ends input */
+            if (i == 0) break;
+            
+            /* Write line with newline */
+            vfs_write(line, i, f);
+            vfs_write("\n", 1, f);
+        }
+        
+    done:
+        vfs_close(f);
+        printf("File saved.\n");
+        return 0;
+    }
+    
+    /* Read mode: display file contents */
     if (argc < 2) {
-        printf("Usage: cat <file>\n");
+        printf("Usage: cat <file> or cat >file\n");
         return 1;
     }
     

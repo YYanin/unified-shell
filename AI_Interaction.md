@@ -11741,3 +11741,34 @@ Port the vi-like edi text editor from unified-shell to esp32-shell.
   - Build instructions for each platform
   - Links to all documentation
 
+
+
+## Removed edi Editor, Added cat Write Mode (January 19, 2026)
+===============================================================
+
+### Reason
+The edi text editor was causing watchdog timeout errors on ESP32 due to
+the blocking nature of its main loop. Rather than continue debugging,
+user requested removal and an alternative file writing method.
+
+### Changes Made
+1. Removed edi editor:
+   - Deleted src/edi_esp32.c
+   - Removed extern cmd_edi from esp_shell.c
+   - Removed edi from builtin_commands table
+   - Removed edi_esp32.c from CMakeLists.txt
+
+2. Added cat write mode to esp_shell.c:
+   - cat >file   - Write lines to file (overwrite)
+   - cat >>file  - Append lines to file
+   - Interactive line input with backspace support
+   - Ends on empty line or Ctrl+D
+
+3. Updated documentation:
+   - esp32-shell/README.md - Removed edi section, added cat write docs
+   - README.md (parent) - Updated esp32-shell features and comparison table
+
+### Build Results
+- RAM: 8.3% (down from 10.5%)
+- Flash: 16.9% (down from 17.1%)
+

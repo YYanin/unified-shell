@@ -14,7 +14,6 @@ idf_component_register(
         "executor_esp32.c"
         "terminal_esp32.c"
         "parser_esp32.c"
-        "edi_esp32.c"
     INCLUDE_DIRS 
         "."
     REQUIRES 

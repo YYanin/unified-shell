@@ -1480,7 +1480,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [],
             "file": "/home/yyanin/Documents/coding/unified-shell/esp32-shell/.pio/build/esp32s3dev/esp-idf/src/libsrc.a",
-            "sources": [ "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/main.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/esp_shell.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/platform_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/vfs_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/executor_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/terminal_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/parser_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/edi_esp32.c" ],
+            "sources": [ "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/main.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/esp_shell.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/platform_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/vfs_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/executor_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/terminal_esp32.c", "/home/yyanin/Documents/coding/unified-shell/esp32-shell/src/parser_esp32.c" ],
             "include_dirs": [ "." ]
         },
         "tcp_transport": {

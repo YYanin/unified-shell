@@ -612,8 +612,7 @@
 				3,
 				4,
 				5,
-				6,
-				7
+				6
 			]
 		}
 	],
@@ -648,8 +647,7 @@
 				3,
 				4,
 				5,
-				6,
-				7
+				6
 			]
 		}
 	],
@@ -695,12 +693,6 @@
 			"backtrace" : 2,
 			"compileGroupIndex" : 0,
 			"path" : "src/parser_esp32.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 2,
-			"compileGroupIndex" : 0,
-			"path" : "src/edi_esp32.c",
 			"sourceGroupIndex" : 0
 		}
 	],

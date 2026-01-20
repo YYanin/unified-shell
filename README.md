@@ -54,7 +54,7 @@ A compact shell port for ESP32 microcontrollers.
 - SPIFFS filesystem for persistent storage
 - GPIO control (read/write/mode)
 - System monitoring (info, free, uptime, fsinfo)
-- Vi-like edi text editor (adapted for constraints)
+- File creation via cat >file / cat >>file
 - Environment variables with expansion
 - Subset of unified-shell commands
 
@@ -75,7 +75,8 @@ A compact shell port for ESP32 microcontrollers.
 | Arithmetic           | Yes ($((expr)))       | No                  |
 | Conditionals         | Yes (if/then/fi)      | No                  |
 | File Tools           | 10 tools              | 6 tools             |
-| Text Editor (edi)    | Yes                   | Yes (constrained)   |
+| Text Editor (edi)    | Yes                   | No                  |
+| File Writing (cat)   | Yes (echo/redirect)   | Yes (cat >file)     |
 | GPIO Control         | No                    | Yes                 |
 | Filesystem           | Linux VFS             | SPIFFS              |
 | Memory               | Dynamic (malloc)      | Static allocation   |
