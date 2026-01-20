@@ -11695,3 +11695,49 @@ Phase 1-6 of ESP32_Prompts.md now complete:
 - Phase 5: ESP32-Specific Features (Prompts 5.1-5.4) - DONE
 - Phase 6: Testing and Documentation (Prompts 6.1-6.2) - DONE
 
+
+
+## edi Text Editor Port to ESP32 (Completed)
+==============================================
+Date: January 19, 2026
+
+### Task
+Port the vi-like edi text editor from unified-shell to esp32-shell.
+
+### Implementation Details
+1. Created edi_esp32.c (746 lines) - Adapted from builtin_edi.c
+   - Static allocation instead of malloc (ESP32 memory constraints)
+   - Maximum 50 rows, 128 characters per line
+   - 80x24 screen size
+   - VT100 terminal escape sequences for display
+   - SPIFFS file I/O for loading/saving files
+
+2. Registered edi command in esp_shell.c builtin_commands table
+
+3. Added edi_esp32.c to CMakeLists.txt SRCS list
+
+### Build Issues Fixed
+- Duplicate case values: CTRL_KEY('h') == 0x08 (backspace)
+  - Removed redundant cases, kept 0x08 with comment
+- snprintf format-truncation warnings (ESP-IDF -Werror)
+  - Increased cursor buffer 16->32 bytes
+  - Limited command display to %.50s
+  - Shortened edi_save() message format
+
+### Editor Features (ESP32)
+- Modal editing: NORMAL, INSERT, COMMAND modes
+- Navigation: h/j/k/l, arrow keys, 0/$, g/G
+- Editing: i/a/o/O (insert), x (delete char), dd (delete line)
+- Commands: :w (save), :q (quit), :wq (save+quit), :q! (force quit)
+
+### Build Results
+- SUCCESS: RAM 10.5%, Flash 17.1%
+
+### Documentation Updates
+- esp32-shell/README.md - Added Text Editor section with usage guide
+- README.md (parent) - Comprehensive project overview explaining:
+  - Project structure with both shells
+  - Feature comparison table
+  - Build instructions for each platform
+  - Links to all documentation
+

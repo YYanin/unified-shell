@@ -82,6 +82,9 @@ static int cmd_gpio(int argc, char **argv);
 static int cmd_format(int argc, char **argv);
 static int cmd_fsinfo(int argc, char **argv);
 
+/* External command - edi text editor */
+extern int cmd_edi(int argc, char **argv);
+
 /* ============================================================================
  * Built-in Command Table
  * ============================================================================ */
@@ -114,6 +117,9 @@ static const esp_shell_cmd_t builtin_commands[] = {
     /* Filesystem management */
     {"fsinfo",  "Show filesystem info",          cmd_fsinfo},
     {"format",  "Format the filesystem",         cmd_format},
+    
+    /* Text editor */
+    {"edi",     "Vi-like text editor",           cmd_edi},
     
     /* Shell history */
     {"history", "Show command history",          cmd_history},

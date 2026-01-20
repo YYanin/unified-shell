@@ -109,6 +109,44 @@ esp32-shell/
 - `env` - List all environment variables
 - `$VAR` or `${VAR}` - Variable expansion in commands
 
+### Text Editor
+- `edi [file]` - Vi-like modal text editor
+
+**Editor Modes:**
+- **NORMAL** - Navigate and edit (default mode)
+- **INSERT** - Type text directly
+- **COMMAND** - Execute commands (`:w`, `:q`, etc.)
+
+**Navigation (Normal Mode):**
+- `h/j/k/l` - Left/Down/Up/Right
+- `0/$` - Beginning/End of line
+- `g/G` - First/Last line
+- Arrow keys also work
+
+**Editing (Normal Mode):**
+- `i` - Enter insert mode at cursor
+- `a` - Enter insert mode after cursor
+- `o/O` - New line below/above
+- `x` - Delete character at cursor
+- `dd` - Delete current line
+
+**Commands (press `:` first):**
+- `:w` - Save file
+- `:q` - Quit (fails if modified)
+- `:wq` - Save and quit
+- `:q!` - Force quit without saving
+
+**Other Keys:**
+- `ESC` - Return to normal mode
+- `Backspace` - Delete character (insert mode)
+- `Enter` - New line (insert mode)
+
+**Limitations (ESP32):**
+- Maximum 50 lines per file
+- Maximum 128 characters per line
+- Screen size: 80x24
+- Uses SPIFFS filesystem at /spiffs
+
 ### GPIO Control
 - `gpio read <pin>` - Read GPIO pin state (0 or 1)
 - `gpio write <pin> <0|1>` - Set GPIO pin output level
