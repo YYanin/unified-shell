@@ -820,6 +820,58 @@ See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for detailed information.
 - Limited to POSIX systems
 - Very long lines (>200 chars) may have display artifacts on some terminals
 
+## ESP32 Variant
+
+An embedded variant of this shell has been ported to ESP32 microcontrollers.
+
+### ESP32 Shell Location
+
+See the **[esp32-shell/](../esp32-shell/)** directory for the embedded version.
+
+### Key Differences from Desktop Version
+
+| Feature | Desktop (ushell) | ESP32 Shell |
+|---------|-----------------|-------------|
+| Platform | Linux/POSIX | ESP32-S3 + FreeRTOS |
+| Execution | fork/exec | Direct function calls |
+| Pipelines | Full support | Not available |
+| Background jobs | Full support | Not available |
+| External programs | Any executable | Built-in only |
+| Filesystem | Full POSIX | SPIFFS (flat, 1MB) |
+| History | 500 entries | 20 entries |
+| Command line | 4096 chars | 256 chars |
+| Threading | pthread | FreeRTOS tasks |
+
+### ESP32-Specific Features
+
+- `gpio` - Direct GPIO pin control
+- `fsinfo` - Flash filesystem info
+- `format` - Format SPIFFS partition
+- `info` - Chip information
+- `free` - Heap memory status
+- `uptime` - Time since boot
+- `reboot` - Restart ESP32
+
+### Building for ESP32
+
+```bash
+cd ../esp32-shell
+
+# Build with PlatformIO
+~/.platformio/penv/bin/pio run -e esp32s3dev
+
+# Flash to device
+~/.platformio/penv/bin/pio run -e esp32s3dev -t upload
+
+# Open serial monitor
+~/.platformio/penv/bin/pio device monitor -b 115200
+```
+
+For detailed ESP32 documentation, see:
+- [esp32-shell/README.md](../esp32-shell/README.md)
+- [esp32-shell/docs/USER_GUIDE.md](../esp32-shell/docs/USER_GUIDE.md)
+- [esp32-shell/docs/DEVELOPER_GUIDE.md](../esp32-shell/docs/DEVELOPER_GUIDE.md)
+
 ## Future Enhancements
 
 Potential improvements:

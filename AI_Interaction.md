@@ -11320,3 +11320,378 @@ Build: SUCCESS
 - sleep 5 & -> "error: background processes (&) not supported on ESP32"
 - help -> Shows available commands with limitations note
 
+
+---
+
+## Prompt 5.1: Add ESP32-Specific Commands
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Commands Already Implemented (from earlier work)
+
+1. **reboot** - Restart the ESP32 (calls esp_restart())
+2. **free** - Show free heap memory and minimum free heap
+3. **uptime** - Show time since boot in HH:MM:SS format
+4. **info** - Show ESP32 chip info (cores, WiFi, BT, flash, IDF version)
+
+### New Command Added
+
+5. **gpio** - GPIO pin control
+   - gpio read <pin> - Read pin state (0 or 1)
+   - gpio write <pin> <0|1> - Write HIGH/LOW to pin
+   - gpio mode <pin> <in|out> - Set pin as input/output
+   - Uses ESP-IDF driver/gpio.h API
+   - Validates pin range (0-48 for ESP32-S3)
+
+### Files Modified
+
+- esp_shell.c:
+  - Added #include "driver/gpio.h"
+  - Added cmd_gpio forward declaration
+  - Added gpio to builtin_commands table
+  - Implemented cmd_gpio() with read/write/mode subcommands
+
+### Build Results
+
+RAM:   7.5% (24,696 / 327,680 bytes)
+Flash: 16.8% (263,555 / 1,572,864 bytes)
+Build: SUCCESS
+
+### Manual Tests (to verify on hardware)
+
+- gpio mode 2 out -> "GPIO2 mode set to OUTPUT"
+- gpio write 2 1 -> "GPIO2 <- 1" (LED on if connected)
+- gpio write 2 0 -> "GPIO2 <- 0" (LED off)
+- gpio mode 4 in -> "GPIO4 mode set to INPUT"
+- gpio read 4 -> "GPIO4 = 0" or "GPIO4 = 1"
+
+
+---
+
+## Prompt 5.2: Implement Flash Filesystem Support
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Already Implemented (from earlier work)
+
+1. **Partition table** (partitions.csv)
+   - nvs: 0x6000 bytes at 0x9000 (NVS storage)
+   - phy_init: 0x1000 bytes at 0xF000 (WiFi calibration)
+   - factory: 0x180000 bytes at 0x10000 (1.5MB app)
+   - storage: 0x100000 bytes at 0x190000 (1MB SPIFFS)
+
+2. **VFS layer** (vfs_esp32.c)
+   - SPIFFS mounted at /spiffs on boot
+   - Auto-format if mount fails
+   - POSIX-like file operations via ESP-IDF VFS
+
+3. **Working directory**
+   - Defaults to /spiffs
+   - cd/pwd commands work with VFS layer
+
+### New Commands Added
+
+1. **fsinfo** - Show filesystem information
+   - Displays total/used/free space
+   - Shows mount point (/spiffs)
+   - Shows usage percentage
+
+2. **format** - Format the SPIFFS filesystem
+   - Requires --yes flag for safety
+   - Unmounts, formats, remounts
+   - WARNING message without --yes
+
+### Files Modified
+
+- esp_shell.c:
+  - Added #include "esp_spiffs.h"
+  - Added cmd_fsinfo and cmd_format forward declarations
+  - Added commands to builtin_commands table
+  - Implemented cmd_fsinfo() with esp_spiffs_info()
+  - Implemented cmd_format() with safety confirmation
+
+### Build Results
+
+RAM:   7.5% (24,696 / 327,680 bytes)
+Flash: 16.9% (265,067 / 1,572,864 bytes)
+Build: SUCCESS
+
+### Manual Tests (to verify on hardware)
+
+- fsinfo -> Shows SPIFFS usage (total/used/free)
+- touch test.txt -> Creates file
+- echo "hello world" > test.txt -> Writes to file
+- cat test.txt -> Shows "hello world"
+- reboot -> Device restarts
+- cat test.txt -> File persists after reboot
+- format -> Shows warning, requires --yes
+- format --yes -> Erases all files
+- ls -> Empty directory after format
+
+
+---
+
+## Prompt 5.3: Optimize Memory Usage
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Created shell_config.h
+
+Centralized configuration header with platform-specific constants:
+
+**ESP32 Settings (memory-constrained):**
+- SHELL_MAX_LINE_LEN: 256 bytes
+- SHELL_MAX_ARGS: 16
+- SHELL_HISTORY_SIZE: 20
+- SHELL_MAX_ENV_VARS: 32
+- SHELL_MAX_VAR_NAME/VALUE: 32/128 bytes
+- SHELL_MAX_PATH: 128 bytes
+- SHELL_MAX_FILENAME: 64 bytes
+- SHELL_LOW_MEMORY_WARN: 8192 bytes
+- SHELL_CRITICAL_MEMORY: 4096 bytes
+
+**Linux Settings (generous):**
+- SHELL_MAX_LINE_LEN: 4096 bytes
+- SHELL_MAX_ARGS: 256
+- SHELL_HISTORY_SIZE: 500
+- Larger values for all other limits
+
+### Updated Headers
+
+All headers now include shell_config.h and use its constants:
+
+1. **esp_shell.h** - Uses ESP_SHELL_* compatibility macros
+2. **parser_esp32.h** - Uses PARSER_* compatibility macros  
+3. **terminal_esp32.h** - Uses TERMINAL_* compatibility macros
+
+### Added Heap Monitoring
+
+**main.c changes:**
+- print_banner() now shows free heap and min heap at startup
+- Displays low memory warning when below SHELL_LOW_MEMORY_WARN
+- Displays critical warning when below SHELL_CRITICAL_MEMORY
+
+### Files Created/Modified
+
+- CREATED: shell_config.h (centralized configuration)
+- MODIFIED: esp_shell.h (include shell_config.h)
+- MODIFIED: parser_esp32.h (include shell_config.h)
+- MODIFIED: terminal_esp32.h (include shell_config.h)
+- MODIFIED: main.c (heap monitoring in banner)
+
+### Build Results
+
+RAM:   8.3% (27,256 / 327,680 bytes)
+Flash: 16.9% (265,235 / 1,572,864 bytes)
+Build: SUCCESS
+
+### Memory Usage Benefits
+
+- Static allocation via fixed-size buffers
+- No dynamic memory for command parsing
+- Configurable limits prevent unbounded growth
+- Heap monitoring enables leak detection
+
+
+---
+
+## Prompt 5.4: Create ESP32 Build Configuration
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Configuration Already in Place
+
+Most of Prompt 5.4 was already implemented in earlier phases. Verified and enhanced:
+
+1. **platformio.ini** - PlatformIO build configuration
+   - ESP-IDF 5.5.0 framework
+   - esp32-s3-devkitc-1 board
+   - Custom partitions.csv
+   - Build flags for ESP_PLATFORM
+
+2. **CMakeLists.txt (root)** - ESP-IDF project config
+   - cmake_minimum_required(VERSION 3.16)
+   - Includes ESP-IDF build system
+
+3. **src/CMakeLists.txt** - Component registration
+   - All source files listed
+   - Required components: driver, esp_timer, spiffs, vfs
+
+4. **partitions.csv** - Custom partition table
+   - nvs, phy_init, factory (1.5MB), storage (1MB SPIFFS)
+
+5. **sdkconfig.defaults** - SDK defaults (UPDATED)
+   - SPIFFS configuration
+   - Console/UART at 115200
+   - Main task stack 8192
+   - Compiler optimization for size
+   - CPU frequency 160MHz
+   - Flash size 8MB (fixed warning)
+
+### New Files Created
+
+1. **flash.sh** - Convenience script
+   - ./flash.sh          # Build, flash, monitor
+   - ./flash.sh build    # Build only
+   - ./flash.sh upload   # Build and upload
+   - ./flash.sh monitor  # Serial monitor only
+   - ./flash.sh uploadfs # Upload SPIFFS data
+   - ./flash.sh clean    # Clean build
+
+### README.md Updated
+
+Added documentation for new commands:
+- gpio read/write/mode
+- fsinfo, format --yes
+- set, unset, env
+- Variable expansion ($VAR, ${VAR})
+
+### Build Results
+
+RAM:   8.3% (27,256 / 327,680 bytes)
+Flash: 16.9% (265,235 / 1,572,864 bytes)
+Build: SUCCESS (no warnings)
+
+
+---
+
+## Prompt 6.1: Create ESP32 Test Suite
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Test Files Created
+
+1. **tests/test_esp32.sh** - Host simulation tests (65 tests)
+   - Source file existence checks
+   - Configuration constant verification
+   - Forbidden feature detection (no fork/execve/waitpid/pipe)
+   - Platform guard checks
+   - Build file verification
+   - Partition table checks
+   - SDK config verification
+   - Memory limit validation
+   - Command registration checks
+   - Documentation tests
+
+2. **tests/test_esp32_device.py** - Serial device tests
+   - Connects via pyserial
+   - Automated command testing over serial
+   - Test categories:
+     - basic: echo, pwd, ls, help, cd
+     - system: free, uptime, info, fsinfo
+     - variable: set, unset, env
+     - file: touch, rm
+     - gpio: gpio read
+     - error: invalid commands, long commands
+     - parsing: quoted strings
+
+### Usage
+
+Host tests (no hardware required):
+```bash
+./tests/test_esp32.sh          # Run all tests
+./tests/test_esp32.sh -v       # Verbose
+./tests/test_esp32.sh -t commands  # Specific category
+```
+
+Device tests (requires ESP32 connected):
+```bash
+pip install pyserial
+python3 tests/test_esp32_device.py /dev/ttyACM0
+python3 tests/test_esp32_device.py /dev/ttyACM0 -t basic
+```
+
+### Test Results
+
+Host tests: 65/65 PASSED
+
+### Test Categories (Host)
+
+- source: Source file structure
+- config: Configuration constants
+- forbidden: Forbidden features
+- guards: Platform guards
+- build: Build files
+- partition: Partition table
+- sdk: SDK config
+- memory: Memory limits
+- commands: Command registration
+- docs: Documentation
+
+
+---
+
+## Prompt 6.2: Update All Documentation
+
+**Date:** 2026-01-19
+**Status:** COMPLETE
+
+### Documentation Created/Updated
+
+1. **esp32-shell/README.md** - Already comprehensive
+   - Project overview with hardware requirements
+   - Build and flash instructions (PlatformIO)
+   - All available commands documented
+   - Troubleshooting section
+   - Memory considerations
+   - SPIFFS filesystem usage
+
+2. **unified-shell/README.md** - UPDATED
+   - Added new "ESP32 Variant" section
+   - Feature comparison table (Desktop vs ESP32)
+   - ESP32-specific features list
+   - Build instructions for ESP32
+   - Links to ESP32 documentation
+
+3. **esp32-shell/docs/USER_GUIDE.md** - CREATED
+   - Getting started guide
+   - Connecting to the shell (multiple terminal options)
+   - Basic commands with examples
+   - File operations (SPIFFS)
+   - Environment variables
+   - GPIO control examples
+   - System commands
+   - Keyboard shortcuts
+   - Limitations section
+   - Tips and tricks
+   - Full command reference table
+
+4. **esp32-shell/docs/DEVELOPER_GUIDE.md** - CREATED
+   - Architecture overview with diagram
+   - Source file structure
+   - Step-by-step: Adding new commands
+   - Memory considerations and budget
+   - Build system documentation
+   - Testing guide (host + device)
+   - Debugging techniques
+   - Porting to other ESP32 variants
+   - Code style guidelines
+
+### Documentation Structure
+
+```
+esp32-shell/
+|-- README.md                    # Quick start and overview
+|-- docs/
+    |-- USER_GUIDE.md            # End-user documentation
+    |-- DEVELOPER_GUIDE.md       # Developer documentation
+
+unified-shell/
+|-- README.md                    # Updated with ESP32 section
+```
+
+### All ESP32 Prompts Complete
+
+Phase 1-6 of ESP32_Prompts.md now complete:
+- Phase 1: Project Analysis (Prompts 1.1-1.3) - DONE
+- Phase 2: Platform Abstraction (Prompts 2.1-2.2) - DONE
+- Phase 3: AI Integration Removal (Prompt 3.1) - DONE
+- Phase 4: ESP32 Core Changes (Prompts 4.1-4.5) - DONE
+- Phase 5: ESP32-Specific Features (Prompts 5.1-5.4) - DONE
+- Phase 6: Testing and Documentation (Prompts 6.1-6.2) - DONE
+

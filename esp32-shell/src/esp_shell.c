@@ -33,6 +33,8 @@
 #include "esp_chip_info.h"
 #include "esp_flash.h"
 #include "esp_log.h"
+#include "esp_spiffs.h"
+#include "driver/gpio.h"
 
 /* Tag for ESP logging */
 static const char *TAG = "shell";
@@ -76,6 +78,9 @@ static int cmd_env(int argc, char **argv);
 static int cmd_jobs(int argc, char **argv);
 static int cmd_fg(int argc, char **argv);
 static int cmd_bg(int argc, char **argv);
+static int cmd_gpio(int argc, char **argv);
+static int cmd_format(int argc, char **argv);
+static int cmd_fsinfo(int argc, char **argv);
 
 /* ============================================================================
  * Built-in Command Table
@@ -92,6 +97,7 @@ static const esp_shell_cmd_t builtin_commands[] = {
     {"info",    "Show system information",       cmd_info},
     {"free",    "Show free memory",              cmd_free},
     {"uptime",  "Show system uptime",            cmd_uptime},
+    {"gpio",    "Control GPIO pins",             cmd_gpio},
     
     /* Directory commands */
     {"pwd",     "Print working directory",       cmd_pwd},
@@ -104,6 +110,10 @@ static const esp_shell_cmd_t builtin_commands[] = {
     {"touch",   "Create empty file",             cmd_touch},
     {"rm",      "Remove file",                   cmd_rm},
     {"mkdir",   "Create directory",              cmd_mkdir},
+    
+    /* Filesystem management */
+    {"fsinfo",  "Show filesystem info",          cmd_fsinfo},
+    {"format",  "Format the filesystem",         cmd_format},
     
     /* Shell history */
     {"history", "Show command history",          cmd_history},
@@ -354,6 +364,185 @@ static int cmd_uptime(int argc, char **argv) {
     printf("Uptime: %lu:%02lu:%02lu (%lu ms)\n", 
            hours, mins % 60, secs % 60, ms);
     
+    return 0;
+}
+
+/**
+ * @brief gpio command - Control GPIO pins
+ * 
+ * Usage:
+ *   gpio read <pin>        - Read pin state (0 or 1)
+ *   gpio write <pin> <0|1> - Write pin state
+ *   gpio mode <pin> <in|out> - Set pin mode
+ */
+static int cmd_gpio(int argc, char **argv) {
+    if (argc < 3) {
+        printf("Usage: gpio <read|write|mode> <pin> [value]\n");
+        printf("  gpio read <pin>         - Read pin state\n");
+        printf("  gpio write <pin> <0|1>  - Write HIGH/LOW\n");
+        printf("  gpio mode <pin> <in|out> - Set input/output\n");
+        return 1;
+    }
+    
+    int pin = atoi(argv[2]);
+    
+    /* Validate pin number (ESP32-S3 has GPIO 0-48, but some are reserved) */
+    if (pin < 0 || pin > 48) {
+        printf("gpio: invalid pin number %d (must be 0-48)\n", pin);
+        return 1;
+    }
+    
+    if (strcmp(argv[1], "read") == 0) {
+        /* Read pin state */
+        int level = gpio_get_level(pin);
+        printf("GPIO%d = %d\n", pin, level);
+        return 0;
+        
+    } else if (strcmp(argv[1], "write") == 0) {
+        /* Write pin state */
+        if (argc < 4) {
+            printf("gpio write: missing value (0 or 1)\n");
+            return 1;
+        }
+        int value = atoi(argv[3]);
+        if (value != 0 && value != 1) {
+            printf("gpio write: value must be 0 or 1\n");
+            return 1;
+        }
+        esp_err_t err = gpio_set_level(pin, value);
+        if (err != ESP_OK) {
+            printf("gpio write: failed (pin may not be configured as output)\n");
+            return 1;
+        }
+        printf("GPIO%d <- %d\n", pin, value);
+        return 0;
+        
+    } else if (strcmp(argv[1], "mode") == 0) {
+        /* Set pin mode */
+        if (argc < 4) {
+            printf("gpio mode: missing mode (in or out)\n");
+            return 1;
+        }
+        gpio_mode_t mode;
+        if (strcmp(argv[3], "in") == 0 || strcmp(argv[3], "input") == 0) {
+            mode = GPIO_MODE_INPUT;
+        } else if (strcmp(argv[3], "out") == 0 || strcmp(argv[3], "output") == 0) {
+            mode = GPIO_MODE_OUTPUT;
+        } else {
+            printf("gpio mode: invalid mode '%s' (use 'in' or 'out')\n", argv[3]);
+            return 1;
+        }
+        
+        /* Configure the GPIO */
+        gpio_config_t io_conf = {
+            .pin_bit_mask = (1ULL << pin),
+            .mode = mode,
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type = GPIO_INTR_DISABLE
+        };
+        esp_err_t err = gpio_config(&io_conf);
+        if (err != ESP_OK) {
+            printf("gpio mode: failed to configure pin\n");
+            return 1;
+        }
+        printf("GPIO%d mode set to %s\n", pin, (mode == GPIO_MODE_INPUT) ? "INPUT" : "OUTPUT");
+        return 0;
+        
+    } else {
+        printf("gpio: unknown command '%s'\n", argv[1]);
+        printf("Use: read, write, or mode\n");
+        return 1;
+    }
+}
+
+/**
+ * @brief fsinfo command - Show filesystem information
+ * 
+ * Displays SPIFFS partition usage (total, used, free space).
+ */
+static int cmd_fsinfo(int argc, char **argv) {
+    (void)argc;
+    (void)argv;
+    
+    size_t total = 0, used = 0;
+    esp_err_t ret = esp_spiffs_info(NULL, &total, &used);
+    
+    if (ret != ESP_OK) {
+        printf("fsinfo: failed to get filesystem info\n");
+        return 1;
+    }
+    
+    size_t free_space = total - used;
+    int usage_percent = (total > 0) ? (int)((used * 100) / total) : 0;
+    
+    printf("SPIFFS Filesystem Info\n");
+    printf("----------------------\n");
+    printf("Mount point:  /spiffs\n");
+    printf("Total size:   %lu bytes (%lu KB)\n", (unsigned long)total, (unsigned long)(total / 1024));
+    printf("Used:         %lu bytes (%lu KB)\n", (unsigned long)used, (unsigned long)(used / 1024));
+    printf("Free:         %lu bytes (%lu KB)\n", (unsigned long)free_space, (unsigned long)(free_space / 1024));
+    printf("Usage:        %d%%\n", usage_percent);
+    
+    return 0;
+}
+
+/**
+ * @brief format command - Format the SPIFFS filesystem
+ * 
+ * WARNING: This erases all data on the filesystem!
+ * Requires confirmation: format --yes
+ */
+static int cmd_format(int argc, char **argv) {
+    /* Require --yes flag to confirm */
+    int confirmed = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--yes") == 0 || strcmp(argv[i], "-y") == 0) {
+            confirmed = 1;
+            break;
+        }
+    }
+    
+    if (!confirmed) {
+        printf("WARNING: This will erase all files on /spiffs!\n");
+        printf("To confirm, run: format --yes\n");
+        return 1;
+    }
+    
+    printf("Formatting SPIFFS filesystem...\n");
+    
+    /* Unmount first */
+    esp_vfs_spiffs_unregister(NULL);
+    
+    /* Format the partition */
+    esp_err_t ret = esp_spiffs_format(NULL);
+    if (ret != ESP_OK) {
+        printf("format: failed to format filesystem\n");
+        /* Try to remount anyway */
+        esp_vfs_spiffs_conf_t conf = {
+            .base_path = "/spiffs",
+            .partition_label = NULL,
+            .max_files = 5,
+            .format_if_mount_failed = false
+        };
+        esp_vfs_spiffs_register(&conf);
+        return 1;
+    }
+    
+    /* Remount */
+    esp_vfs_spiffs_conf_t conf = {
+        .base_path = "/spiffs",
+        .partition_label = NULL,
+        .max_files = 5,
+        .format_if_mount_failed = false
+    };
+    ret = esp_vfs_spiffs_register(&conf);
+    if (ret != ESP_OK) {
+        printf("format: failed to remount filesystem\n");
+        return 1;
+    }
+    
+    printf("Format complete. Filesystem is empty.\n");
     return 0;
 }
 

@@ -21,20 +21,38 @@
 
 #include "platform.h"
 #include "esp_shell.h"
+#include "shell_config.h"
 
 /* Tag for ESP-IDF logging system */
 static const char *TAG = "esp32_shell";
 
 /**
- * @brief Print startup banner
+ * @brief Print startup banner with heap monitoring
  * 
- * Displays the shell welcome message and system information
+ * Displays the shell welcome message, system information,
+ * and current free heap memory for monitoring.
  */
 static void print_banner(void) {
+    /* Get current free heap for monitoring */
+    uint32_t free_heap = esp_get_free_heap_size();
+    uint32_t min_heap = esp_get_minimum_free_heap_size();
+    
     printf("\n");
     printf("=====================================\n");
     printf("   ESP32 Shell (ushell port)\n");
     printf("=====================================\n");
+    printf("Free heap:  %lu bytes\n", (unsigned long)free_heap);
+    printf("Min heap:   %lu bytes\n", (unsigned long)min_heap);
+    
+    /* Warn if memory is low */
+    if (free_heap < SHELL_LOW_MEMORY_WARN) {
+        printf("\n*** WARNING: Low memory! ***\n");
+    }
+    if (free_heap < SHELL_CRITICAL_MEMORY) {
+        printf("*** CRITICAL: Very low memory! ***\n");
+    }
+    
+    printf("\n");
     printf("Type 'help' for available commands\n");
     printf("Type 'info' for system information\n");
     printf("\n");

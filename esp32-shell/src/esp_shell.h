@@ -13,24 +13,20 @@
 extern "C" {
 #endif
 
+/* Include centralized configuration - all constants defined there */
+#include "shell_config.h"
+
 /* ============================================================================
  * ESP32 Shell Configuration Constants
+ * ============================================================================
+ * NOTE: All configuration constants are now defined in shell_config.h
+ * The following are provided by shell_config.h via compatibility macros:
+ *   - ESP_SHELL_MAX_LINE_LEN  (command line buffer size)
+ *   - ESP_SHELL_MAX_ARGS      (max arguments per command)
+ *   - ESP_SHELL_HISTORY_SIZE  (history entries to remember)
+ *   - ESP_SHELL_PROMPT        (shell prompt string)
+ *   - ESP_SHELL_MAX_PATH      (max working directory path)
  * ============================================================================ */
-
-/* Maximum length of a single command line */
-#define ESP_SHELL_MAX_LINE_LEN      256
-
-/* Maximum number of arguments per command */
-#define ESP_SHELL_MAX_ARGS          16
-
-/* Command history size (number of entries to remember) */
-#define ESP_SHELL_HISTORY_SIZE      10
-
-/* Shell prompt string */
-#define ESP_SHELL_PROMPT            "esp32> "
-
-/* Current working directory max length */
-#define ESP_SHELL_MAX_PATH          128
 
 
 /* ============================================================================

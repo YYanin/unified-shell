@@ -32,6 +32,9 @@
 
 #include <stddef.h>
 
+/* Include centralized configuration - provides TERMINAL_* compatibility macros */
+#include "shell_config.h"
+
 /* ============================================================================
  * Terminal Configuration Constants
  * ============================================================================ */

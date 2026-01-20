@@ -34,9 +34,19 @@
 #define PARSER_ESP32_H
 
 #include <stddef.h>
+#include <stdbool.h>
+
+/* Include centralized configuration - provides PARSER_* compatibility macros */
+#include "shell_config.h"
 
 /* ============================================================================
  * Parser Configuration - Memory Limits
+ * ============================================================================
+ * NOTE: Configuration constants are now defined in shell_config.h
+ * The following are provided via compatibility macros:
+ *   - PARSER_MAX_LINE_LEN, PARSER_MAX_ARGS, PARSER_MAX_ARG_LEN
+ *   - PARSER_MAX_VARS, PARSER_MAX_VAR_NAME, PARSER_MAX_VAR_VALUE
+ * These can still be overridden by defining them before including this header.
  * ============================================================================ */
 
 /* Maximum length of a single command line */

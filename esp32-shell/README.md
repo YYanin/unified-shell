@@ -100,6 +100,19 @@ esp32-shell/
 - `touch <file>` - Create empty file
 - `rm <file>` - Remove file
 - `echo <text>` - Print text
+- `fsinfo` - Show filesystem usage (total/used/free)
+- `format --yes` - Format SPIFFS filesystem (WARNING: erases all files)
+
+### Environment Variables
+- `set VAR=value` - Set environment variable
+- `unset VAR` - Remove environment variable
+- `env` - List all environment variables
+- `$VAR` or `${VAR}` - Variable expansion in commands
+
+### GPIO Control
+- `gpio read <pin>` - Read GPIO pin state (0 or 1)
+- `gpio write <pin> <0|1>` - Set GPIO pin output level
+- `gpio mode <pin> <in|out>` - Configure GPIO direction
 
 ## Troubleshooting
 

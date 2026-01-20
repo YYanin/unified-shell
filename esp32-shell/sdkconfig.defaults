@@ -39,6 +39,14 @@ CONFIG_FREERTOS_USE_STATS_FORMATTING_FUNCTIONS=y
 CONFIG_ESP32_IRAM_AS_8BIT_ACCESSIBLE_MEMORY=n
 CONFIG_COMPILER_OPTIMIZATION_SIZE=y
 
+# CPU frequency - 160MHz is a good balance of performance and power
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=160
+CONFIG_ESP_DEFAULT_CPU_FREQ_160=y
+
+# Use single core for simpler FreeRTOS scheduler (ESP32-S3 is dual-core)
+# Commented out - ESP32-S3 uses both cores by default for better performance
+# CONFIG_FREERTOS_UNICORE=y
+
 # ============================================================================
 # Logging Configuration
 # ============================================================================
@@ -59,3 +67,10 @@ CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
 # Enable full newlib for standard C library support
 CONFIG_NEWLIB_STDIN_LINE_ENDING_LF=y
 CONFIG_NEWLIB_STDOUT_LINE_ENDING_LF=y
+
+# ============================================================================
+# Flash Configuration
+# ============================================================================
+# ESP32-S3-DevKitC-1 has 8MB flash
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="8MB"
