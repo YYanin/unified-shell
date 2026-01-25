@@ -11820,3 +11820,353 @@ Phase 5: Verification and Testing
 - pio run -t upload -> idf.py flash
 - pio device monitor -> idf.py monitor
 
+
+
+---
+
+## Session: January 24, 2026 - ESP-IDF Installation (Prompt 1.1)
+
+### Objective
+Install native ESP-IDF development environment on Linux to prepare for migrating
+the esp32-shell project from PlatformIO to native ESP-IDF toolchain.
+
+### Context
+Following Espressif-IDF-Prompts.md Prompt 1.1 to set up native ESP-IDF.
+Previous build system used PlatformIO which managed ESP-IDF internally.
+Migration to native ESP-IDF provides full control over the build system.
+
+### Steps Completed
+
+1. Created installation directory:
+   - mkdir -p ~/esp
+
+2. Cloned ESP-IDF v5.3.2 with all submodules:
+   - git clone -b v5.3.2 --recursive https://github.com/espressif/esp-idf.git
+   - Repository size: ~2GB with all submodules (wifi libs, bluetooth, etc.)
+
+3. Installed ESP-IDF tools for ESP32-S3 target:
+   - ./install.sh esp32s3
+   - Installed: xtensa-esp-elf-gdb, xtensa-esp-elf, riscv32-esp-elf, 
+     esp32ulp-elf, openocd-esp32, esp-rom-elfs
+   - Created Python virtual environment at ~/.espressif/python_env/idf5.3_py3.12_env/
+   - Installed all required Python packages (esptool, esp-idf-monitor, etc.)
+
+4. Added get_idf alias to ~/.bashrc:
+   - alias get_idf='. $HOME/esp/esp-idf/export.sh'
+   - Must run get_idf in each new terminal to activate ESP-IDF environment
+
+5. Installed missing system dependencies:
+   - sudo apt-get install cmake ninja-build
+   - CMake 3.28.3 and Ninja 1.11.1 installed
+
+### Verification Results
+
+| Check                          | Result                                    |
+|--------------------------------|-------------------------------------------|
+| ESP-IDF Version                | v5.3.2                                    |
+| IDF_PATH                       | /home/nordiffico/esp/esp-idf              |
+| idf.py location                | /home/nordiffico/esp/esp-idf/tools/idf.py |
+| xtensa-esp32s3-elf-gcc version | 13.2.0 (esp-13.2.0_20240530)              |
+| hello_world build              | SUCCESS - built hello_world.bin           |
+
+### Installation Summary
+
+ESP-IDF is now installed and ready for use:
+- Location: ~/esp/esp-idf
+- Version: v5.3.2
+- Target: ESP32-S3
+- Python env: ~/.espressif/python_env/idf5.3_py3.12_env/
+- Tools: ~/.espressif/tools/
+
+### Usage
+
+To use ESP-IDF in a new terminal:
+1. Run: . $HOME/esp/esp-idf/export.sh   (or use get_idf alias)
+2. Navigate to project directory
+3. Build: idf.py build
+4. Flash: idf.py flash
+5. Monitor: idf.py monitor (Ctrl+] to exit)
+
+### Status
+DONE - Prompt 1.1 completed successfully.
+
+
+
+
+---
+
+## Session: January 24, 2026 - ESP-IDF Workflow Documentation (Prompt 1.2)
+
+### Objective
+Document ESP-IDF workflow commands and remove PlatformIO references from the project.
+
+### Tasks Completed
+
+1. Updated esp32-shell/README.md with ESP-IDF commands:
+   - Replaced PlatformIO software requirements with ESP-IDF requirements
+   - Updated Quick Start section with idf.py commands
+   - Added ESP-IDF Command Reference section
+   - Updated Project Structure (removed platformio.ini reference)
+   - Updated Troubleshooting section for ESP-IDF workflow
+   - Updated SPIFFS upload instructions for ESP-IDF
+
+2. Removed PlatformIO files:
+   - Deleted platformio.ini (PlatformIO configuration)
+   - Deleted flash.sh (PlatformIO helper script)
+   - Deleted .pio/ directory (PlatformIO build cache)
+
+### ESP-IDF Command Reference (Quick Reference)
+
+Environment activation (run in each new terminal):
+  . $HOME/esp/esp-idf/export.sh
+  # Or use alias: get_idf
+
+Common build commands:
+  idf.py set-target esp32s3    # Set target chip (once per project)
+  idf.py menuconfig            # Configure project options
+  idf.py build                 # Build project
+  idf.py flash                 # Flash to device
+  idf.py monitor               # Open serial monitor (Ctrl+] to exit)
+  idf.py flash monitor         # Flash and monitor combined
+
+Cleaning:
+  idf.py fullclean             # Remove all build artifacts
+  rm -rf build/                # Alternative clean
+  rm sdkconfig                 # Reset to defaults
+
+Useful options:
+  idf.py -p /dev/ttyACM0 flash # Specify port
+  idf.py -b 921600 flash       # Faster flash baud rate
+  idf.py size                  # Show binary size breakdown
+  idf.py size-components       # Show size by component
+
+### Files Modified
+- esp32-shell/README.md - Updated all sections for ESP-IDF workflow
+
+### Files Deleted
+- esp32-shell/platformio.ini
+- esp32-shell/flash.sh
+- esp32-shell/.pio/ (directory)
+
+### Status
+DONE - Prompt 1.2 completed. PlatformIO references removed.
+
+
+
+
+---
+
+## Session: January 24, 2026 - Directory Structure Reorganization (Prompt 2.1)
+
+### Objective
+Reorganize esp32-shell project from PlatformIO structure to native ESP-IDF structure.
+
+### Changes Made
+
+1. Renamed src/ to main/:
+   - ESP-IDF convention uses main/ as the default component directory
+   - main/ is automatically detected by the ESP-IDF build system
+   - No need for explicit component registration
+
+2. Updated README.md:
+   - Updated Project Structure section to reflect main/ directory
+   - Added all source files to the structure documentation
+
+### Current Project Structure (ESP-IDF native)
+
+esp32-shell/
+|-- CMakeLists.txt          # ESP-IDF project CMake configuration
+|-- partitions.csv          # Custom partition table with SPIFFS
+|-- sdkconfig.defaults      # Default ESP-IDF settings
+|-- sdkconfig.esp32s3dev    # Board-specific configuration
+|-- README.md               # Documentation
+|-- docs/                   # Additional documentation
+|-- tests/                  # Test scripts
+|-- main/                   # Main component (ESP-IDF convention)
+    |-- CMakeLists.txt      # Component build config
+    |-- main.c              # Application entry point (app_main)
+    |-- esp_shell.c/h       # Shell implementation
+    |-- platform.h          # Platform abstraction header
+    |-- platform_esp32.c    # ESP32 platform implementation
+    |-- platform_linux.c    # Linux platform (for testing)
+    |-- parser_esp32.c/h    # Command parser
+    |-- executor_esp32.c/h  # Command executor
+    |-- terminal_esp32.c/h  # Terminal handling
+    |-- vfs_esp32.c         # Virtual filesystem for ESP32
+    |-- vfs_linux.c         # Virtual filesystem for Linux
+    |-- shell_config.h      # Configuration options
+    |-- shell_vfs.h         # VFS header
+    |-- threading_esp32.h   # Threading abstraction
+
+### Verification Results
+- main/ directory exists: PASS
+- src/ directory removed: PASS
+- CMakeLists.txt present in main/: PASS
+- All source files preserved in main/: PASS
+
+### Status
+DONE - Prompt 2.1 completed. Directory structure reorganized to ESP-IDF convention.
+
+
+
+
+---
+
+## Session: January 24, 2026 - Project-Level CMakeLists.txt Update (Prompt 2.2)
+
+### Objective
+Update the project-level CMakeLists.txt for native ESP-IDF.
+
+### Changes Made
+
+Updated esp32-shell/CMakeLists.txt:
+- Removed PlatformIO reference from comments
+- Added build/flash/monitor command hints in header
+- Verified cmake_minimum_required(VERSION 3.16) - correct for ESP-IDF
+- Verified include($ENV{IDF_PATH}/tools/cmake/project.cmake) - correct
+- Verified project(esp32_shell VERSION 1.0.0) - correct
+
+### Updated CMakeLists.txt Content
+
+# ESP32 Shell - Main CMakeLists.txt
+# ============================================================================
+# Native ESP-IDF project configuration for ESP32-S3 shell.
+# Build with: idf.py build
+# Flash with: idf.py flash
+# Monitor with: idf.py monitor
+# ============================================================================
+
+cmake_minimum_required(VERSION 3.16)
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(esp32_shell VERSION 1.0.0)
+
+### Verification
+- cmake_minimum_required version 3.16+: PASS
+- include() uses $ENV{IDF_PATH}: PASS
+- project() defines project name: PASS
+- No PlatformIO references: PASS
+
+### Status
+DONE - Prompt 2.2 completed. Project-level CMakeLists.txt updated.
+
+
+
+
+---
+
+## Session: January 24, 2026 - Complete ESP-IDF Migration (Prompts 2.3 - 5.3)
+
+### Objective
+Complete the migration from PlatformIO to native ESP-IDF for the esp32-shell project.
+
+### Prompts Completed
+
+#### Prompt 2.3: Update Component CMakeLists.txt
+- Updated main/CMakeLists.txt header comments
+- Added spi_flash and esp_system to REQUIRES (fixed build error)
+- Documented that platform_linux.c and vfs_linux.c are excluded (Linux-only)
+
+#### Prompt 3.1: Set Target and Initial Build
+- Set target: idf.py set-target esp32s3
+- Initial build failed due to missing esp_flash.h
+- Fixed by adding spi_flash to REQUIRES
+- Final build: SUCCESS
+
+#### Prompt 3.2: Handle Build Errors
+- Error: esp_flash.h not found
+- Solution: Added spi_flash component to REQUIRES in main/CMakeLists.txt
+- Also added esp_system for system info functions
+
+#### Prompt 4.1: Remove PlatformIO Files (Previously Done)
+- platformio.ini - DELETED
+- flash.sh - DELETED
+- .pio/ - DELETED
+- sdkconfig.esp32s3dev - DELETED
+
+#### Prompt 4.3: Create build.sh Helper Script
+- Created new build.sh convenience script
+- Commands: build, flash, monitor, all/fm, clean, menuconfig, size, help
+- Made executable with chmod +x
+
+#### Prompt 4.4: Update Project Documentation
+- Updated docs/USER_GUIDE.md - replaced PlatformIO monitor with idf.py
+- Updated docs/DEVELOPER_GUIDE.md - replaced all PlatformIO references
+- Updated tests/test_esp32.sh - updated build file checks
+- Created .gitignore for ESP-IDF build artifacts
+
+### Build Results
+
+Binary Size Summary:
+- Flash Code:      142,806 bytes
+- Flash Data:       52,200 bytes
+- DIRAM Used:       68,503 bytes (20.04% of 341,760 bytes)
+- IRAM Used:        16,383 bytes (99.99% of 16,384 bytes)
+- Total Image:     266,700 bytes
+
+Partition Usage:
+- esp32_shell.bin: 0x41240 bytes (266,816 bytes)
+- Smallest partition: 0x180000 bytes (1,572,864 bytes)
+- Free space: 83%
+
+### Final Project Structure
+
+esp32-shell/
+|-- CMakeLists.txt          # ESP-IDF project CMake
+|-- partitions.csv          # Custom partition table
+|-- sdkconfig.defaults      # Default ESP-IDF settings
+|-- sdkconfig               # Generated configuration (not in git)
+|-- build.sh                # Convenience build script
+|-- .gitignore              # Git ignore for build artifacts
+|-- README.md               # Updated documentation
+|-- build/                  # Build output (not in git)
+|-- docs/
+|   |-- USER_GUIDE.md       # Updated for ESP-IDF
+|   |-- DEVELOPER_GUIDE.md  # Updated for ESP-IDF
+|-- tests/
+|   |-- test_esp32.sh       # Updated build file checks
+|-- main/                   # Main component
+    |-- CMakeLists.txt      # Component registration
+    |-- main.c              # Entry point
+    |-- esp_shell.c/h       # Shell implementation
+    |-- platform_esp32.c    # ESP32 HAL
+    |-- platform.h          # Platform abstraction
+    |-- parser_esp32.c/h    # Command parser
+    |-- executor_esp32.c/h  # Command executor
+    |-- terminal_esp32.c/h  # Terminal handling
+    |-- vfs_esp32.c         # SPIFFS filesystem
+    |-- shell_config.h      # Configuration
+    |-- shell_vfs.h         # VFS interface
+    |-- threading_esp32.h   # Threading
+    |-- (platform_linux.c, vfs_linux.c - for testing only)
+
+### Verification
+
+| Check | Status |
+|-------|--------|
+| Target set to esp32s3 | PASS |
+| Build completes | PASS |
+| No PlatformIO references | PASS |
+| build.sh works | PASS |
+| Documentation updated | PASS |
+| .gitignore created | PASS |
+
+### Migration Complete
+
+The esp32-shell project has been fully migrated from PlatformIO to native ESP-IDF.
+
+Quick Start Commands:
+  . ~/esp/esp-idf/export.sh   # Activate ESP-IDF (once per terminal)
+  cd esp32-shell
+  idf.py build                # Build project
+  idf.py flash                # Flash to device
+  idf.py monitor              # Open serial monitor
+  idf.py flash monitor        # Flash and monitor
+
+Or use the convenience script:
+  ./build.sh                  # Build
+  ./build.sh all              # Flash and monitor
+
+### Status
+DONE - All prompts completed. ESP-IDF migration successful.
+
+

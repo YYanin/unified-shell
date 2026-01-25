@@ -99,11 +99,11 @@ esp32-shell/
 ├── docs/
 │   ├── USER_GUIDE.md          # End-user documentation
 │   └── DEVELOPER_GUIDE.md     # This file
-├── platformio.ini             # PlatformIO configuration
 ├── CMakeLists.txt             # ESP-IDF project config
 ├── partitions.csv             # Custom partition table
 ├── sdkconfig.defaults         # SDK configuration
-└── flash.sh                   # Build/flash script
+├── build.sh                   # Convenience build script
+└── .gitignore                 # Git ignore for build artifacts
 ```
 
 ---
@@ -273,43 +273,53 @@ if (free_heap < SHELL_LOW_MEMORY_WARN) {
 
 ## Build System
 
-### PlatformIO Build
+### ESP-IDF Build
 
 ```bash
-# Build only
-~/.platformio/penv/bin/pio run -e esp32s3dev
+# Activate ESP-IDF environment (run once per terminal session)
+. ~/esp/esp-idf/export.sh
 
-# Build and upload
-~/.platformio/penv/bin/pio run -e esp32s3dev -t upload
+# Set target chip (once per project)
+idf.py set-target esp32s3
+
+# Build only
+idf.py build
+
+# Build and flash
+idf.py flash
+
+# Flash and monitor
+idf.py flash monitor
 
 # Clean build
-~/.platformio/penv/bin/pio run -e esp32s3dev -t clean
+idf.py fullclean
 ```
 
 ### Convenience Script
 
 ```bash
-./flash.sh build     # Build only
-./flash.sh upload    # Build and upload
-./flash.sh monitor   # Serial monitor
-./flash.sh           # Upload and monitor
-./flash.sh clean     # Clean build
+./build.sh           # Build only
+./build.sh flash     # Flash to device
+./build.sh monitor   # Serial monitor
+./build.sh all       # Flash and monitor
+./build.sh clean     # Clean build
+./build.sh size      # Show binary size
 ```
 
 ### Key Build Files
 
 | File | Purpose |
 |------|---------|
-| `platformio.ini` | PlatformIO project configuration |
 | `CMakeLists.txt` | ESP-IDF project definition |
-| `src/CMakeLists.txt` | Component source registration |
+| `main/CMakeLists.txt` | Component source registration |
 | `partitions.csv` | Flash partition layout |
 | `sdkconfig.defaults` | ESP-IDF configuration |
+| `build.sh` | Convenience build wrapper |
 
 ### Adding a New Source File
 
-1. Create the file in `src/`
-2. Add to `src/CMakeLists.txt`:
+1. Create the file in `main/`
+2. Add to `main/CMakeLists.txt`:
 
 ```cmake
 idf_component_register(
@@ -428,22 +438,18 @@ void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
 
 ### ESP32 (Original)
 
-Modify `platformio.ini`:
+Set the target chip:
 
-```ini
-[env:esp32dev]
-platform = espressif32
-board = esp32dev
-framework = espidf
+```bash
+idf.py set-target esp32
+idf.py build
 ```
 
 ### ESP32-C3
 
-```ini
-[env:esp32c3]
-platform = espressif32
-board = esp32-c3-devkitm-1
-framework = espidf
+```bash
+idf.py set-target esp32c3
+idf.py build
 ```
 
 ### Key Considerations

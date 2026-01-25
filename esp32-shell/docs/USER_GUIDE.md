@@ -55,10 +55,14 @@ esp32>
 
 ## Connecting to the Shell
 
-### Using PlatformIO Monitor
+### Using ESP-IDF Monitor (Recommended)
 
 ```bash
-~/.platformio/penv/bin/pio device monitor -b 115200
+# Activate ESP-IDF environment first
+. ~/esp/esp-idf/export.sh
+
+# Open monitor
+idf.py monitor
 ```
 
 Press `Ctrl+]` to exit.

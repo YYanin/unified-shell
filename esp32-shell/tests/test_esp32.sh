@@ -232,11 +232,11 @@ test_build_files() {
     log_info "Testing build configuration files..."
     
     local build_files=(
-        "platformio.ini"
         "CMakeLists.txt"
-        "src/CMakeLists.txt"
+        "main/CMakeLists.txt"
         "partitions.csv"
         "sdkconfig.defaults"
+        "build.sh"
     )
     
     for file in "${build_files[@]}"; do

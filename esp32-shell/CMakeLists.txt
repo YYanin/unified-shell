@@ -1,7 +1,9 @@
 # ESP32 Shell - Main CMakeLists.txt
 # ============================================================================
-# This is the top-level CMakeLists.txt for the ESP32 shell project.
-# It uses the ESP-IDF build system which PlatformIO invokes.
+# Native ESP-IDF project configuration for ESP32-S3 shell.
+# Build with: idf.py build
+# Flash with: idf.py flash
+# Monitor with: idf.py monitor
 # ============================================================================
 
 cmake_minimum_required(VERSION 3.16)

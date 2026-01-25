@@ -19,65 +19,105 @@
 
 ## Software Requirements
 
-- **PlatformIO**: Version 6.x or later (via VS Code extension or CLI)
-- **ESP-IDF**: 5.5.0 (installed automatically by PlatformIO)
-- **Python**: 3.8+ (for PlatformIO)
+- **ESP-IDF**: v5.3.2 or later (native installation)
+- **Python**: 3.8+
+- **CMake**: 3.16+
+- **Ninja**: Build system
 
 ## Quick Start
 
-### 1. Install PlatformIO
+### 1. Activate ESP-IDF Environment
 ```bash
-# Install PlatformIO CLI (if not using VS Code extension)
-pip install platformio
+# Must run in each new terminal before using idf.py
+. $HOME/esp/esp-idf/export.sh
 
-# Or use the version in the PlatformIO virtual environment
-~/.platformio/penv/bin/pio --version
+# Or use the alias (if configured in ~/.bashrc):
+get_idf
 ```
 
 ### 2. Build the Project
 ```bash
 cd esp32-shell
 
-# Build only
-~/.platformio/penv/bin/pio run
+# Set target chip (only needed once per project)
+idf.py set-target esp32s3
 
-# Build and upload to connected ESP32-S3
-~/.platformio/penv/bin/pio run -t upload
+# Build only
+idf.py build
+
+# Build and flash to connected ESP32-S3
+idf.py flash
+
+# Build, flash, and open monitor in one command
+idf.py flash monitor
 ```
 
 ### 3. Connect to Serial Console
 ```bash
-# Open serial monitor at 115200 baud
-~/.platformio/penv/bin/pio device monitor -b 115200
+# Open serial monitor (uses configured baud rate from sdkconfig)
+idf.py monitor
 
-# Alternative: Use any serial terminal
+# Alternative: Use any serial terminal at 115200 baud
 minicom -D /dev/ttyACM0 -b 115200
 screen /dev/ttyACM0 115200
 picocom -b 115200 /dev/ttyACM0
 ```
 
 ### 4. Exit Serial Monitor
-- **PlatformIO monitor**: Press `Ctrl+]` or `Ctrl+C`
+- **idf.py monitor**: Press `Ctrl+]`
+- **Monitor help**: Press `Ctrl+T` then `Ctrl+H`
 - **minicom**: Press `Ctrl+A` then `X`
 - **screen**: Press `Ctrl+A` then `\`
 - **picocom**: Press `Ctrl+A` then `Ctrl+X`
+
+## ESP-IDF Command Reference
+
+```bash
+# Environment (run in each new terminal)
+. $HOME/esp/esp-idf/export.sh    # Activate ESP-IDF environment
+
+# Build commands
+idf.py set-target esp32s3        # Set target chip (once per project)
+idf.py menuconfig                # Configure project options (interactive)
+idf.py build                     # Build project
+idf.py flash                     # Flash to device
+idf.py monitor                   # Open serial monitor
+idf.py flash monitor             # Flash and monitor combined
+
+# Cleaning
+idf.py fullclean                 # Remove all build artifacts
+rm -rf build/                    # Alternative clean
+rm sdkconfig                     # Reset configuration to defaults
+
+# Useful options
+idf.py -p /dev/ttyACM0 flash     # Specify port explicitly
+idf.py -b 921600 flash           # Faster flash baud rate
+idf.py size                      # Show binary size breakdown
+idf.py size-components           # Show size by component
+```
 
 ## Project Structure
 
 ```
 esp32-shell/
-|-- platformio.ini          # PlatformIO configuration (esp32s3dev)
-|-- CMakeLists.txt          # ESP-IDF project CMake
+|-- CMakeLists.txt          # ESP-IDF project CMake configuration
 |-- partitions.csv          # Custom partition table with SPIFFS
 |-- sdkconfig.defaults      # Default ESP-IDF settings
-|-- src/
+|-- build.sh                # Convenience build helper script
+|-- .gitignore              # Git ignore for build artifacts
+|-- main/                   # Main component (ESP-IDF convention)
+    |-- CMakeLists.txt      # Component build config
     |-- main.c              # Application entry point (app_main)
     |-- esp_shell.c         # Shell implementation
     |-- esp_shell.h         # Shell interface header
     |-- platform.h          # Platform abstraction header
     |-- platform_esp32.c    # ESP32 platform implementation
     |-- platform_linux.c    # Linux platform (for testing)
-    |-- CMakeLists.txt      # Component build config
+    |-- parser_esp32.c/h    # Command parser
+    |-- executor_esp32.c/h  # Command executor
+    |-- terminal_esp32.c/h  # Terminal handling
+    |-- vfs_esp32.c         # Virtual filesystem
+    |-- shell_config.h      # Configuration options
 ```
 
 ## Available Commands
@@ -118,11 +158,11 @@ esp32-shell/
 
 ## Troubleshooting
 
-### Wrong chip type error during upload
+### Wrong chip type error during build/flash
 If you see "This chip is ESP32-S3, not ESP32. Wrong --chip argument?":
-- Ensure `platformio.ini` has `board = esp32-s3-devkitc-1`
-- Clean build: `rm -rf .pio/build sdkconfig*`
-- Rebuild: `~/.platformio/penv/bin/pio run -t upload`
+- Ensure target is set correctly: `idf.py set-target esp32s3`
+- Clean build: `idf.py fullclean`
+- Rebuild: `idf.py build`
 
 ### UART driver errors
 If you see "uart_read_bytes: uart driver error":
@@ -130,7 +170,8 @@ If you see "uart_read_bytes: uart driver error":
 - Check `platform_esp32.c` calls `uart_driver_install()`
 
 ### Garbled serial output
-- Ensure baud rate is 115200: `pio device monitor -b 115200`
+- Ensure baud rate matches sdkconfig (default 115200)
+- Use: `idf.py monitor` (auto-detects baud rate)
 - Press the EN/Reset button on the board to see boot messages
 
 ### USB device not detected
@@ -138,16 +179,18 @@ If you see "uart_read_bytes: uart driver error":
 # Check if device is connected
 dmesg | tail -20
 
-# Install udev rules for PlatformIO
-curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+# Add user to dialout group for serial port access
+sudo usermod -a -G dialout $USER
+# Log out and back in for group change to take effect
 ```
 
 ### Build fails with missing IDF_PATH
-PlatformIO handles ESP-IDF automatically. If issues persist:
+Ensure ESP-IDF environment is activated:
 ```bash
-~/.platformio/penv/bin/pio platform install espressif32
+. $HOME/esp/esp-idf/export.sh
+# Verify with:
+echo $IDF_PATH
+idf.py --version
 ```
 
 ## Memory Considerations
@@ -164,14 +207,16 @@ Use `free` command to monitor heap usage.
 The partition table allocates 1MB for SPIFFS at `/spiffs`.
 On first boot, SPIFFS is automatically formatted if needed.
 
-To upload files to SPIFFS:
+To upload files to SPIFFS using ESP-IDF:
 ```bash
-# Create a 'data' folder with files to upload
-mkdir data
-echo "Hello ESP32" > data/hello.txt
+# Create a 'spiffs_data' folder with files to upload
+mkdir -p spiffs_data
+echo "Hello ESP32" > spiffs_data/hello.txt
 
-# Upload to SPIFFS
-~/.platformio/penv/bin/pio run -t uploadfs
+# Build SPIFFS image and flash it
+# (requires spiffsgen.py from ESP-IDF components)
+python $IDF_PATH/components/spiffs/spiffsgen.py 0x100000 spiffs_data spiffs.bin
+esptool.py --chip esp32s3 write_flash 0x110000 spiffs.bin
 ```
 
 ## Platform Abstraction
