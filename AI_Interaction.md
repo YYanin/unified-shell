@@ -11772,3 +11772,51 @@ user requested removal and an alternative file writing method.
 - RAM: 8.3% (down from 10.5%)
 - Flash: 16.9% (down from 17.1%)
 
+
+
+## Created Espressif-IDF-Prompts.md (January 24, 2026)
+=======================================================
+
+### Purpose
+Migration guide from PlatformIO to native ESP-IDF for the esp32-shell project.
+User needs consistency with future ESP-IDF projects per external requirements.
+
+### Document Structure (following ESP32_Prompts.md blueprint)
+
+Phase 1: Environment Setup
+- Prompt 1.1: Install ESP-IDF (clone, install tools, set up environment)
+- Prompt 1.2: Document ESP-IDF workflow (command reference)
+
+Phase 2: Project Structure Migration
+- Prompt 2.1: Reorganize directory structure (src/ -> main/)
+- Prompt 2.2: Update project-level CMakeLists.txt
+- Prompt 2.3: Update component CMakeLists.txt
+
+Phase 3: Build System Migration
+- Prompt 3.1: Set target and initial build
+- Prompt 3.2: Handle build errors
+- Prompt 3.3: Flash and test
+
+Phase 4: Cleanup and Documentation
+- Prompt 4.1: Remove PlatformIO files
+- Prompt 4.2: Update README
+- Prompt 4.3: Create build.sh helper script
+- Prompt 4.4: Update project documentation
+
+Phase 5: Verification and Testing
+- Prompt 5.1: Full build and flash test
+- Prompt 5.2: Compare binary sizes
+- Prompt 5.3: Document migration results
+
+### Key Changes in Migration
+- platformio.ini removed (config moves to sdkconfig)
+- src/ renamed to main/ (ESP-IDF convention)
+- pio commands replaced with idf.py commands
+- flash.sh replaced with build.sh helper script
+- .pio/ build dir replaced with build/
+
+### Command Mapping
+- pio run           -> idf.py build
+- pio run -t upload -> idf.py flash
+- pio device monitor -> idf.py monitor
+
